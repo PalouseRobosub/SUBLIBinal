@@ -1,0 +1,495 @@
+﻿Palouse RoboSub Club
+Microcontroller Library Documentation
+By Ryan Summers and James Irwin
+
+
+Table of Contents:
+Introduction
+Fundamentals
+Queue
+Overview
+Queue Objects
+Queue Functions
+Queue Creation (Initialization)
+Enqueue (push)
+Dequeue (pop)
+Low Layer
+Timer
+Overview
+Objects
+Functions
+Timer Constructor
+UART
+Overview
+Objects
+Functions
+Uart Constructor
+Transmit
+Receive
+I2C
+Overview
+Objects
+Functions
+I2C Constructor
+I2C Send
+I2C Background Process
+ADC
+Overview
+Objects
+Functions
+Upper Layer
+Packet Communication
+Overview
+Packet Synchronization
+Objects
+Functions
+Sensors
+Overview
+Objects
+Functions
+
+
+________________
+Introduction
+The purpose of the microcontroller library project is to simplify the structure of the microcontroller code and eliminate redundancy within the existing codebase in use on the submarine. With a restructuring of code, modifications are made much simpler by only changing a single code location as opposed to modifying multiple functions. This implementation also eliminates a massive header file of #define declarations of registers on the microcontroller. The library will need to be continually maintained and updated as the microcontrollers are updated. The current library is designed for a PIC32MX250F128B microcontroller (12/22/2014). 
+The purpose of this documentation is to allow future club members to update the microcontroller code base as needed. This document contains in-depth descriptions of the functionality of all processes within the library and is intended specifically for users maintaining and updating the library. This document is NOT intended for end users of the library in microcontroller design implementation. Please refer to the microcontroller design documentation for that purpose. 
+The main topics this document will cover will be the fundamental data structures that the library depends on, timer functionality, UART channel functionality, I2C channels, SPI, and ADC (analog to digital converter) implementation. The main data structure underlying all implementation is a simple queue, which structure is utilized within the UART, timer, SPI,  ADC, and I2C functions. There are two primary ‘layers’ within the library. These layers are referred to as a low layer and an upper layer. The low layer contains most of the fundamentals of functionality, typically involving data packets as simple bytes. The upper layer implements a conceptual idea of packet management within the communication channels.
+The primary structure of the library utilizes the system.h file as the primary file encapsulating all other header files. Each area of functionality is then given its own specific header and source file which draws from the system.h file. The system.h file holds any information that is utilized by multiple other areas. Typically, this file is used for variable declarations.
+
+
+Fundamentals
+Queue
+Overview
+        The queue is a structure utilized within all processes that utilize interrupts and communication between the microcontroller and a peripheral device. The queue utilized within the library is not dynamic, however, as the microcontroller does not support dynamic allocation of memory. To combat this, a circularly linked array has been implemented with a defined size in place of the dynamic queue. A queue can be specified to have as many elements as desired internally. Default implementation within other areas of functionality will typically utilize arrays of size 100, or another size deemed appropriate for the task. A queue object has been created to help understandability within the code.
+Queue Objects
+        The queue object is composed of 5 distinct elements:
+typedef struct QUEUE {
+        uint8 *buffer; 
+        uint buffer_size; 
+        uint QueueStart;
+        uint QueueEnd;
+        uint numStored;
+    } Queue;
+
+
+The *buffer element is a pointer to the memory that the queue utilizes. Typically, the address of the array the queue is using will be stored within this variable. The second element specifies the number of elements that the queue has access to, which typically is the size of the array in use. The QueueStart variable represents the index of the first element of the queue. As the queue is a circularly linked array, the start position of the queue will not necessarily be the first location of the array. Consequently, the QueueEnd variable stores the index of the last element in the queue. There is no guarantee that QueueStart index is smaller than QueueEnd, as the structure is cyclical. Any data not contained between QueueStart and QueueEnd indices is not currently in use by the queue, and the data stored in these locations is unknown. The numStored variable represents the amount of elements that are currently stored in the queue. This variable is redundant, as calculations can be done utilizing other variables within the object to calculate the number of stored elements, but this variable allows for simplicity within the code design. The variable type (uint8 and uint) are definitions contained within the global header file, system.h. uint8 is an 8 bit unsigned integer which is being utilized as one byte of data. Uint is simply an unsigned integer.
+
+
+Queue Functions
+Queue Creation (Initialization)
+Definition:
+Queue create_queue(uint8* buffer, uint buffer_size);
+Specification:
+This function will create and return a queue object with the supplied parameters. It will automatically initialize all varaibles and prepare the queue for usage. 
+Input:
+Uint8 *buffer: This variable is a pointer to the memory to be used by the queue
+Uint buffer_size: this variable is the size of the memory supplied in the *buffer variable. Typically, this is the size of the array in use
+
+
+Enqueue (push)
+        Definition:
+ int enqueue(Queue* queue, uint8* data, uint data_size);
+Specification:        
+This will push a piece of data onto the queue if there is space to hold it. If the queue is full, the data will be completely ignored. The function will copy the data supplied into the queue memory.
+Input:
+Queue *queue: This variable is the queue object that will be pushed onto.
+Uint8 *data: This variable is a pointer to the data that should be pushed onto the queue
+Uint Data_size: This variable is the size of the data that is being supplied within the data pointer[a]. This is typically the size of the array pointed to by *data.
+
+
+Dequeue (pop)
+        Definition:
+int dequeue(Queue* queue, uint8* output_data, uint data_size);
+Specification:
+        This function will remove a piece of data from the queue with the required specifications. The data is not deleted from the queue memory, as only the queue indices are changed. The data will be handed back with output data pointers, and the function will return an integer for success or failure. Future implementation: return output error codes.
+Input:
+        Queue *queue: this is a pointer to the queue object that is being used.
+        Uint8 *output_data: this is a pointer to where the data popped off the queue will be stored.
+        Uint Data_size: This variable contains the amount of data to be popped off the queue.
+
+
+Low Layer
+Foreword: In our design of the library, we chose to simplify the management of interrupt service routines (ISR’s) through use of function pointers. When a constructor calls for a function_ptr, it is asking for a pointer to a function that the end user will define on their own and supply. This allows for modularity between projects with the library, and allows the ISR’s to do anything that the end user would like them to do. In the actual ISR function declarations, the additional functionality will only call if there was a supplied function pointer, otherwise it will skip over it and complete the ISR.
+Timer
+Overview
+        The timer is the simplest of all the functionalities built into the library. There is only one function acting as a timer constructor. There are a few specifics relating to which timer is being used. On the PIC32 microcontroller, there are type A and type B timers with different functionalities. For our purposes, the only difference is that the type A timers do not have access to the number of clock dividers as the type B timers. Type A timers may only have clock dividers of 1, 8, 64, and 256. Type B timers have access to all range of clock dividers of multiplicity 2. If timer 1 is supplied a clock divider that is not supported by type A, our function will automatically truncate the timer value. This results in a procedurally unknown clock divider. By truncating the supplied timer value by one bit. This is currently untested but believed to give the closest possible acceptable divider. Any other timer is allowed to utilize any clock divider supported.
+Objects
+Timer objects were deemed unnecessary as timers are representations of basic functions. There are a number of enumerations, however.
+typedef enum {
+        Div_1,
+        Div_2,
+        Div_4,
+        Div_8,
+        Div_16,
+        Div_32,
+        Div_64,
+        Div_128,
+        Div_256
+    } Clock_Divider;
+This clock divider enumeration provides which scalar should be supplied for the clock dividing parameter of the constructor.
+
+
+    typedef enum {
+        Timer_1,
+        Timer_2,
+        Timer_3,
+        Timer_4,
+        Timer_5
+    } Timer_Type;
+
+
+The timer type enumeration specifies which timer is being used, aka timer 1 (the only type A timer), or timers 2-5.
+
+
+Functions
+Timer Constructor
+Definition:
+void initialize_TIMER(Clock_Divider divide, uint16 period, Timer_Type timer, void *function_ptr, boolean enable);
+Specifications:
+        The timer constructor should be supplied a clock divider that is appropriate for the timer type being used. If the timer type is timer_1, the clock dividers supported are 1, 8, 64, and 256. Any other values will be truncated to two bits. Any other timer will support a full range of clock dividers.
+Input:
+Clock_Divider Divide: The supplied value of the clock divider. A clock divider of 2 will divide the default onboard clock by 2.
+Uint16 Period: The period that the clock should count to before it fires the interrupt.
+Timer_Type Timer: The timer specifically in use, aka Timer_1, or timers 2-5.
+Void *function_ptr: The supplied function pointer that will allow for additional functionality within the ISR. If this is supplied NULL, there is a default ISR that will fire for information management. This pointer is solely for additional functionality desired within the ISR. A standalone function should be created on the end-user side to fill this parameter.
+        Boolean Enable: This variable will enable or disable the timer at creation.
+
+
+UART
+Overview
+        The UART functionality depends on the fundamental queue structure specified earlier. Within the UART, there is a queue for received information (rx queue), and a queue for transmission (tx queue). Both of these queues are crucial for ISR functionality. The way that the ISRs work is defined into two separate processes. There is an active process that occurs when the ISR is fired, and there is a background process for information management. The purpose of two processes is to keep the overhead time involved within the ISR as small as possible, as interrupts are disabled within all ISRs in the library. If another ISR fires while one is being handled, it will wait until interrupts are re-enabled to be handled. In the case where there is time-sensitive information involved, overhead needs to be minimized. The UART ISR will only pop information from communication registries on the microcontroller and push them onto the received queue of the UART object, or it will grab data from the transmit queue and place it into the transmission registry on the microcontroller. The background process is where actual data processing occurs. In the background process, data within the received and transmission queues will be modified and prepared. The library functions do not do anything with data in the received and transmit queues, but provide function pointers to allow for end-user implementation. 
+Objects
+typedef struct UART_DATA {
+        Queue Rx_queue;
+        Queue Tx_queue;
+        boolean Tx_is_idle;
+    } Uart_Data;
+        The Uart_Data object contains two queue objects and a Boolean flag. The queue objects are for transmission and receiving of information within the ISR. The Boolean flag indicates whether or not the Tx queue has information within it.
+
+
+    typedef enum {
+        UART1,
+        UART2
+    } Uart;
+        The Uart enumeration specifies which UART channel on the microcontroller is being used. There are two channels available on the PIC32MX250F128B.
+
+
+Functions
+Uart Constructor
+Definition:
+Uart_Data* initialize_UART(uint speed, uint pb_clk, Uart which_uart, uint8 *rx_buffer_ptr, uint8 rx_buffer_size, uint8 *tx_buffer_ptr, uint8 tx_buffer_size, boolean tx_en, boolean rx_en, void* rx_callback, void* tx_callback);
+Specification:
+        The constructor function creates a UART communication channel with the supplied variables, allowing for data management as specified within the tx and rx function pointers. Agreed upon channel speeds between the computer and the microcontroller must be supplied within the speed and pb_clk variables to synchronize data transmissions. This function will hand back a pointer to the UART_Data object constructed. The data must remain internal as a global variable within the library function for use by the ISRs, send, and transmit functions.
+Input:
+uint speed: The clock speed used to calculate baud rate.
+uint pb_clk: Clock speed utilized in baud calculation
+Uart which_uart: This variable specifies which UART channel is to be used.
+uint8 *rx_buffer_ptr: This is a pointer to memory allocated for use by the rx queue.
+uint8 rx_buffer_size: This specifies the size of memory pointed to for the rx queue.
+uint8 *tx_buffer_ptr: This is a pointer to the memory allocated for use by the tx queue.
+uint8 tx_buffer_size: This specifies the size of the memory pointed to for the tx queue.
+boolean tx_en: This enables or disables transmission.
+boolean rx_en: This enables or disables receiving on the channel.
+void* rx_callback: A function pointer for data handling of information within the received queue.
+void* tx_callback: A function pointer for data handling of information to be placed within the tramsission queue.
+Transmit
+Definition:
+ int send_UART(Uart channel, uint8 data_size, uint8 *data_ptr);
+Specification:
+        This function will send a piece of information on the specified uart channel. Memory is copied into the queue, so data specified within the data_ptr can be changed any time after the function call. The function will return a 0 upon success, and a 1 upon failure. This function will place data onto the tx queue, while a separate process in the ISR will send the data in the queue.
+Input:
+Uart channel: This specifies which UART should be used, aka UART1, or UART2.
+uint8 data_size: This specifies the size of data pointed to by the data_ptr variable
+uint8 *data_ptr: A pointer to the data to be copied into the tx queue.
+Receive
+Definition:
+        int receive_UART(Uart channel, uint8 data_size, uint8 *data_ptr);
+Specification:
+        This function will remove information from the received queue and place it into the specified pointers in the function call. This is essentially a pop function for the rx queue.
+Input: 
+Uart channel: This specifies which UART should be used, aka UART1, or UART2.
+uint8 data_size: This specifies the size of data pointed to by the data_ptr variable
+uint8 *data_ptr: A pointer to the data to be copied into the rx queue.
+
+
+I2C 
+Overview
+        I2C is a two-wire bus communication protocol. This library assumes the microcontroller is the master device, talking to a slave. Currently it is used for talking to various sensors on the submarine. Because there could be multiple different devices that are being spoken to at once, a simple byte buffer scheme will not work, it would be impossible to interpret the data without some sort of context. The I2C_NODE data type adds this context. To read a device, one must fill an I2C_NODE with the required information, and call send_I2C. This will load the node into the work queue. Eventually, the I2C ISR will talk to the requested device and obtain the requested information. It will then store the data into a I2C_NODE. Because of the highly asynchronous nature of the communication, we use a callback function to let the original process know when the data has been collected. This occurs in the I2C background process.
+Objects
+typedef struct I2C_NODE {
+        uint8 device_id;
+        uint8 device_address; 
+        uint8 sub_address; 
+        uint8* data_buffer; 
+        uint8 data_size;
+        I2C_MODE mode; 
+        void (*callback) (struct I2C_NODE); 
+    } I2C_Node;
+
+
+An I2C_NODE contains all the information necessary for talking to an I2C slave device. The device_id is meant as a unique identifier for I2C devices. It can be useful for differentiating between devices that have the same address. The device_address is the I2C of the device. The sub_address is the location in memory of the I2C device that is to be read/write. 
+
+
+The data_buffer is a pointer to a memory location where data is to be read from or written too on the microcontroller, it should be supplied by the user.
+
+
+The data_size is the size of the data_buffer, so that the library knows how large it is.
+
+
+typedef struct I2C_DATA {
+        Queue Rx_queue;
+        Queue Tx_queue;
+        boolean Tx_is_idle;
+    } I2C_Data;
+
+
+        The I2C_DATA object contains two queue objects and a Boolean flag. The Tx_queue is holds incoming I2C tasks and results are stored in the Rx_queue. The Boolean flag indicates whether or not the ISR is actively working on a task, or if it is idle.
+
+
+typedef enum {
+        STARTED,
+        DEV_ADDR_W_SENT,
+        SUB_ADDR_SENT,
+        DATA_SENT,
+        RESTARTED,
+        STOPPED_TEMP,
+        STARTED_TEMP,
+        DEV_ADDR_R_SENT,
+        DATA_RECEIVED,
+        ACK_SENT,
+        NOACK_SENT,
+        STOPPED
+    } I2C_STATE;
+
+
+        The I2C_STATE enum is used for the state machine in the I2C ISR.
+
+
+    typedef enum {
+        I2C1,
+        I2C2
+    } I2C_Channel;
+
+
+The I2C_Channel enumeration specifies which I2C channel on the microcontroller is being used. There are two channels available on the PIC32MX250F128B.
+
+
+Functions
+I2C Constructor
+Definition:
+        I2C_Data* initialize_I2C(uint pb_clk, I2C_Channel channel, uint8 *rx_buffer_ptr, uint8 rx_buffer_size, uint8 *tx_buffer_ptr, uint8 tx_buffer_size, void* callback);
+Specification:
+The constructor function creates a I2C communication channel with the supplied variables, allowing for data management as specified within the tx and rx function pointers. The I2C will be setup in master mode communicating at 100kHz. This function will hand back a pointer to the UART_Data object constructed. The data must remain internal as a global variable within the library function for use by the ISRs, send, and transmit functions. 
+
+
+Input:
+        uint pb_clk: This value specifies the frequency of the peripheral bus clock in Hz.
+        Channel channel: This value specifies which I2C channel should be used. I2C1 or I2C2 should be used
+        uint8 *rx_buffer_ptr: This is a pointer to the data to be used for the receive queue where data from external devices will be written.
+        uint8 rx_buffer_size: This specifies the size of data pointed to by rx_buffer_ptr. This is typically the size of the array supplied to rx_buffer_ptr.
+        uint8 *tx_buffer_ptr: This is a pointer to the data to be used for the transmission queue. This queue will be used for writing data to external devices.
+        uint8 tx_buffer_size: This specifies the number of elements pointed to by tx_buffer_ptr and typically is the size of the array supplied.
+void *callback: The callback parameter is a function pointer to a callback function that allows for additional functionality within the I2C ISR. This callback will be called whenever the I2C ISR is called, which can be multiple times for a single transaction. It is not necessary to supply a callback function for normal operation of the I2C library functions.
+
+
+I2C Send
+Definition:
+ int send_I2C(I2C_Channel channel, I2C_Node node);
+Specification:
+        This function will initialize an I2C transaction and does not necessarily specify a read or a write of data. That must be specified within the I2C_Node node parameter. This function will initialize the lengthy process of an I2C transaction, and the I2C ISR will be triggered multiple times before it is completed. This function will return an error code if it failed to place the node onto the appropriate queue.
+
+
+Input:
+I2C_Channel channel: This parameter specifies which I2C channel will be used for communication. The channel should be configured before this function is called.
+I2C_Node node: This parameter is an I2C transaction node. When the node is placed onto the queue, only a pointer to it is maintained. Therefore, it is important that this node does not leave scope while it is waiting to be processed. This node contains all information necessary to conduct an I2C transaction.
+
+
+I2C Background Process
+Definition:
+ int bg_process_I2C(void);
+Specification:
+        The I2C background process will first dequeue a node from the channel 1 receive queue. It will then call the nodes callback. If no callback is supplied, the information in the node will be lost. All data within the channel 1 receive queue will be processed until the queue is empty. The background process will then move on to the channel 2 receive queue and repeat the process until that queue is also empty. It is worth mentioning that this could potentially contain a large number of nodes, and, depending on the size of the callback functions, this function could take a significant amount of time to return. This function does not return a value.
+Input:
+        This function does not accept any arguments.
+
+
+SPI
+Overview
+        The SPI library functions are contained to easily configure and send using the Serial Peripheral Interface (SPI). The library function assumes that this microcontroller is the master device and does not support multi-master mode. The main use of these libraries is intended to interface with sensors and other peripheral devices using the SPI protocol, as opposed to facilitating communication between two microcontrollers. There are two available SPI channels for configuration. Once the channel has been configured, it is a relatively simple process to transmit data on the SPI channel by calling send_SPI. Read_SPI has yet to be implemented.
+Objects
+ typedef enum {
+        SPI_CH_1,
+        SPI_CH_2
+    } SPI_Channel;
+
+
+This structure simply denotes an enumeration of SPI channels. There are only two SPI channels available on the specified microcontroller.
+
+
+    /*Object Defintions*/
+    typedef struct SPI_DATA {
+        Queue Rx_queue;
+        Queue Tx_queue;
+        boolean is_idle;
+    } SPI_Data;
+
+
+The SPI_Data object is created when the SPI is initialized. This is an internal structure used by the library to maintain information about the SPI module. A pointer to this internal object is handed back after initialization for end-user monitoring of the queues. This object holds the transmission and receive queues, as well as the status of the SPI object.
+
+
+    typedef struct SPI_CONFIG {
+        uint speed; 
+        uint pb_clk; 
+        SPI_Channel which_spi; 
+        uint8 clk_edge; 
+        uint8 *tx_buffer_ptr; 
+        uint tx_buffer_size; 
+        void (*tx_callback); 
+        boolean tx_en; 
+        uint8 *rx_buffer_ptr; 
+        uint rx_buffer_size; 
+        void (*rx_callback); 
+        boolean rx_en; 
+    }SPI_Config; 
+
+
+The SPI Configuration structure is one of the most important structures for correct implementation of SPI. The speed parameter defines the desired clock frequency for SPI communication. the pb_clk parameter specifies the current speed setting of the peripheral bus clock. Both these speeds should be specified in Hz. The which_spi parameter specifies which spi channel is being configured with these parameters. The clk_edge parameter is used to denote whether serial data should be transitioned when the clock signal moves from an idle to active state, or an active to idle state. To understand more about this parameter, please read the datasheet where it specifies the clock edge bit. The *tx_buffer_ptr parameter is a pointer to the data used to create the transmission buffer. The tx_buffer_size parameter should contain the number of elements pointed to by the tx_buffer_ptr parameter, which is typically the size of the array. The *tx_callback should be a function pointer for additional operation that should be completed whenever transmission on the SPI channel occurs. The tx_en parameter specifies whether or not transmission should be enabled on this channel. The *rx_buffer_ptr parameter points to the data buffer used in the receive queue. The rx_buffer_size parameter should contain the number of elements pointed to by rx_buffer_ptr, and is typically the size of the array that rx_buffer_ptr points to. The *rx_callback is a function pointer. This function will be called whenever something is received on the SPI channel. The rx_en parameter specifies whether or not receiving should be enabled on the SPI channel.
+
+
+Functions
+SPI Constructor
+Definition:
+        SPI_Data* initialize_SPI(SPI_Config config);
+Specification:
+The Constructor will initialize all registers to properly use SPI. This function will return an SPI_Data pointer so that the end user can monitor the status of the SPI channel, however the main purpose of this structure is for internal use in the library. It should be known that the CKP bit is held at 1, which means the SPI clock is active in low state. This will affect the clock edge parameter supplied. 
+Input:
+        SPI_Config config: This is the configuration structure needed to initialize the SPI module.
+Send SPI
+Definition:
+        Error send_SPI(SPI_Channel channel, uint8 *data_ptr, uint data_size);
+Specification:
+This function will send the specified data on the SPI channel specified. The channel must be configured prior to using this function. This function will return an error code regarding the space status of the buffers. Error codes typically indicate that a buffer is full.
+Input:
+        SPI_Channel channel: This specifies which SPI channel the data should be sent on.
+        uint8 *data_ptr: This is a pointer to the data that should be sent on the channel.
+        uint data_size: This specifies the number of bytes pointed to by data_ptr.
+
+
+ADC 
+Overview
+        The Analog to Digital Converter (ADC) has been simply implemented to allow the reading of analog values on external pins. The ADC is composed of two queues, the work queue and the result queue. The work queue is data that has yet to be processed, while the results queue is where processed data is placed. When the ADC is to be used, an ADC_Node must be constructed and filled out. This node should also specify a function pointer to a function that will accept the node itself as a single input parameter. This callback function should be used for processing the final results supplied by the ADC. Because of the large amount of data processing that occurs for each of the nodes, a background process is also utilized within the ADC. The background process loops through the contents of the result queue and calls each of the callbacks for the nodes. It will iterate until it is interrupted or it has emptied the queue entirely. This allows for interrupts to process if they are time sensitive, as the ADC has the potential to hog a large sequential section of processing time if the ADC result queue fills up.
+Objects
+
+
+    typedef enum {
+        ADC_CH_0,
+        ADC_CH_1,
+        ADC_CH_2,
+        ADC_CH_3,
+        ADC_CH_4,
+        ADC_CH_5,
+        ADC_CH_9 = 9,
+        ADC_CH_10,
+        ADC_CH_11
+    } ADC_Channel;
+
+
+The ADC_Channel structure is simply an enumeration for each of the ADC Channels available on the microcontroller. By specifying the ADC Channel, the library will configure the pin for analog mode and set the tristate as an input. Once the user specifies which analog channel is to be used, they do not need to configure that pin after initialization of the ADC.
+
+
+    typedef struct ADC_DATA {
+        Queue Results_queue;
+        Queue Work_queue;
+        boolean is_idle;
+    } ADC_Data;
+
+
+The ADC_Data structure encapsulates internally the structure of the ADC so that it is maintained through function calls. The ADC_Data is purely an internal structure and should not be used in end-user applications. The Results_Queue parameter specifies the queue for results when the ADC has completed processing them. The Work_Queue variable is a queue that holds all waiting analog reads. This queue will be processed as the ADC is able to enqueue more nodes.
+
+
+    typedef struct ADC_NODE {
+        uint8 device_id;
+        ADC_Channel channel;
+        uint16 data;
+        void (*callback) (struct ADC_NODE);
+    } ADC_Node;
+
+
+The ADC_Node is one of the most crucial structures within the ADC library functions. This is a structure that encapsulates the information needed to read from a pin on the ADC.  The device_id parameter is currently not utilized within the library structure and is exclusively for the end user to differentiate between ADC nodes within a single callback function for data management. A unique ID should be assigned to different types of data read on the ADC to avoid confusion in data processing when utilizing a single callback function. The channel parameter specifies which ADC channel this is to be done on. This is relative to the microcontroller that the library is designed for specified in the introduction. For example, ADC_CH_0 will utilize the pin on the microcontroller labelled as AN0. The data parameter is where the result will be stored when the ADC has completed conversion of the analog value. The data will need to be split into two separate bytes in the callback function if the user wishes to transmit it utilizing the packetizer. This can simply be done by shifting and masking bits. The *callback parameter is a function pointer to a function that accepts an ADC_Node as its only input parameter. This function will be called during the background process of the ADC when data has been fully converted and placed onto the finished queue.
+
+
+    typedef struct ADC_CONFIG {
+        uint16 channels;
+        uint8 *work_buffer_ptr;
+        uint work_buffer_size;
+        uint8 *result_buffer_ptr;
+        uint result_buffer_size;
+        void* callback;
+    } ADC_Config;
+
+
+The ADC_Config structure encapsulates all the necessary information to initialize the ADC. This structure should be supplied to the initialize_ADC function to configure and start the ADC. The channels parameter should specify which channels the ADC. This is a bit field that can contain multiple channels. AN0 should be placed in bit position 0, AN1 should be placed in bit position 1, and so on. The proper pins will then be configured for analog ADC measurement after the initialization function is called. The *work_buffer_ptr parameter is a pointer to the memory dedicated for the work queue within the ADC. The work_buffer_size parameter specifies the size of data pointed to by work_buffer_ptr, typically this is the size of the array. The parameter *result_buffer_ptr is a pointer to the data that the results queue will reside in. The result_buffer_size parameter specifies the number of elements pointed to by result_buffer_ptr, and typically is the size of the array supplied to result_buffer_ptr. The *callback parameter allows for extended functionality within the ADC ISR. Currently, the ISR checks if the ADC is currently running and starts it if idle. It will then take a node from the work buffer and begin reading and conversion. AFter this process, the callback function will be called. There does not need to be a callback function implemented for the ADC to function as intended.
+
+
+Functions
+        ADC Constructor
+Definition:
+ADC_Data* initialize_ADC(ADC_Config config);
+Specification:
+        The initialize_ADC function accepts the configuration parameters for the ADC and will configure all internal registers needed for operation. The negative input for analog comparison is set to ground, data is configured as unsigned 16-bit values, the sample clock source is set to the internal oscillator, AVDD and AVSS are set as the analog limits, inputs are not scanned, interrupts always trigger after conversion, and the ADC is set to sample for 15 clock cycles. The initialize function will also configure all the channels specified within the config, both tristate and analog, by calling setup_ADC_pins internally. It will then finally turn the ADC on and return a pointer to the ADC_Data contained internally. This ADC_Data is not necessary for normal implementation and is purely for end user monitoring of the queues.
+Input: 
+        ADC_Config config: This is a structure specifying how the ADC should be configured.
+
+
+Read ADC
+Definition
+int read_ADC(ADC_Node node);
+Specification:
+The read_ADC function is one of the most important functions of the ADC library implementation. This is the function that must be called to read any analog channel on the ADC and process the resulting data. First, an ADC_Node structure must be handed to the function. The structure is maintained within the queue as a pointer to the node, so it is important that this node does not go out of scope before the data has been processed. If the node leaves scope, this can result in unexpected behavior due to a dangling pointer. When a conversion of the analog value has been completed, the node will be supplied within its own callback function and processing of the data can be completed by the end-user. If no callback is specified within the node, the data will be thrown away. This function will return the status of the dequeue, thus notifying the user if they are attempting to enqueue a read when the work queue is already full.
+Input:
+ADC_Node node: This value is the node that contains information to specify what the ADC should be reading. This node should not go out of scope before the ADC has processed it, as a pointer to the structure is stored on the ADC work queue.
+
+
+        Background Process ADC
+Definition:
+void bg_process_ADC(void);
+Specification:
+        The bg_process_ADC is the background process for the ADC. This function will continually pop data off the ADC results queue and call the callback function for each of the nodes. That means that if no callback is defined for a node, the data in the node is thrown out and the next node will be processed. This function will not return until all data within the results queue has been processed. Thus, if there are a large number of elements within the result queue, the bg_process_ADC function may not return for a significant amount of time. 
+Input:
+        This function does not accept any arguments.
+
+
+ADC Analog Pin Configuration
+Definition:
+void setup_ADC_pins(uint16 channels);
+Specification:
+        This function is used internally for analog pin configuration during the initialization of the ADC. A bit field should be provided to determine which pins should be configured. This function can be called externally by the end user if they simply would like to configure analog pins easily. This function does not return. 
+Input:
+uint16 channels: This value is a bitfield containing channels that should be configured as analog inputs.  If AN0 shall be configured, bit position 0 should be set to a 1. If AN1 should be configured, place a 1 into bit position 1. This process should be repeated for all desired channels. 
+
+
+Upper Layer
+Packet Communication
+Overview
+The packet-based communication protocol is primarily used for communication between a microcontroller and computer, but it could also work for inter-microcontroller communication. It is using the UART protocol as the underlying data transport mechanism, but this library could be expanded to use other protocols such as SPI for faster communication if desired. 
+The protocol sends data as a series of bytes, logically grouping them together into packets.  The figure below shows the packet format. 
+ wavedrom.png 
+
+The first byte in a packet is known as the Control Byte, which signifies the start of the packet and is used for synchronization. It is the newline character ‘\n’, or 0x0A. The next byte is the Size Byte, describing how large the remainder of the packet is. This byte must be a size between (0,1)-255[b]. The next byte(s) contain the data. There is not a hard specification for how the data must be organized, but it is recommended that the first few bytes be description bytes that describe the rest of the data, and the remainder are data bytes.
+Packet Synchronization
+Packet synchronization is necessary on the receiving end to ensure packets are interpreted properly. Under normal operation, sync should be obtained during startup of the communication channel, and should remain in sync. However, sync can be regained if packets data is scrambled or a program crashes, but any data sent in the meantime will be lost. The basic algorithm for obtaining sync is described in the figure below.
+ sync_algorithm.png 
+
+Bytes are received and thrown away until the control byte is found. Once found, the next byte received is interpreted as the size byte. Then a number of bytes are received, as determined by the size byte. One more byte is then received, which should be the control byte if we are properly in sync. If the byte is not the control byte, we keep looking again for the control byte. If it is, then sync has been obtained. 
+After sync has been obtained, when packets are received the first byte is checked to see if it is the control byte. If not, the synchronization algorithm is performed again. This ensures that the communication channel remains in synchronization.
+Objects
+Functions
+
+
+Sensors
+Overview
+This component is an abstraction for interfacing with sensors. It allows for the easy construction of individual sensor functions. It supports any underlying data transport protocol, including I2C and ADC-based sensors. How do we do this? I’ve have no clue. But it would be really cool yeah?
+Objects
+Functions
+[a]insert first byte of data is enqueue first
+[b]Should we allow packets that use a size of 0, or in other words, are nothing more than the control byte and size byte? This could be useful as a junk packet for getting into sync.
