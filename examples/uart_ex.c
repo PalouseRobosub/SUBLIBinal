@@ -11,9 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../Timer.h"
-#include "../UART.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  System Includes
@@ -83,12 +81,11 @@ int main(void) {
     uint8 blah;
 
     //setup peripherals
-    timer_config.divide = Div_256;
-    timer_config.period = 50000;
+    timer_config.frequency = 1000;
     timer_config.which_timer = Timer_1;
     timer_config.callback = &timer_callback;
     timer_config.enabled = 1;
-    initialize_TIMER(timer_config);
+    initialize_Timer(timer_config);
 
     uart_config.which_uart = UART_CH_1;
     uart_config.pb_clk = PB_CLK;

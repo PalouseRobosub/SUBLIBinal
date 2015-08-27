@@ -11,8 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../Timer.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  Processor Configuration
@@ -70,12 +69,11 @@ int main(void) {
     Timer_Config timer_config;
 
     //setup peripherals
-    timer_config.divide = Div_256;
-    timer_config.period = 50000;
+    timer_config.frequency = 1000;
     timer_config.which_timer = Timer_1;
     timer_config.callback = &timer_callback;
     timer_config.enabled = 1;
-    initialize_TIMER(timer_config);
+    initialize_Timer(timer_config);
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();

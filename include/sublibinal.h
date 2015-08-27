@@ -38,7 +38,6 @@ extern "C" {
 #include "Timer.h"
 #include "UART.h"
 #include "packetizer.h"
-#include "PWM.h"
 #ifdef	__cplusplus
 }
 #endif

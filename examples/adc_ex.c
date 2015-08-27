@@ -11,11 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../Timer.h"
-#include "../UART.h"
-#include "../ADC.h"
-#include "../packetizer.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  System Includes
@@ -85,12 +81,11 @@ int main(void) {
     ADC_Config adc_config;
 
     //setup peripherals
-    timer_config.divide = Div_256;
-    timer_config.period = 50000;
+    timer_config.frequency = 1000;
     timer_config.which_timer = Timer_1;
     timer_config.callback = &timer_callback;
     timer_config.enabled = 1;
-    initialize_TIMER(timer_config);
+    initialize_Timer(timer_config);
 
     uart_config.which_uart = UART_CH_1;
     uart_config.pb_clk = PB_CLK;
@@ -154,5 +149,5 @@ void adc_callback(ADC_Node node)
     send_data[1] = data_LB;
     send_data[2] = data_HB;
 
-    send_packet(PACKET_UART1, send_data, sizeof(send_data));
+    send_packet(PACKET_UART_CH_1, send_data, sizeof(send_data));
 }

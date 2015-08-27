@@ -11,11 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../Timer.h"
-#include "../UART.h"
-#include "../I2C.h"
-#include "../packetizer.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  System Includes
@@ -90,12 +86,11 @@ int main(void) {
     uint8 blah;
 
     //setup peripherals
-    timer_config.divide = Div_256;
-    timer_config.period = 50000;
+    timer_config.frequency = 1000;
     timer_config.which_timer = Timer_1;
     timer_config.callback = &timer_callback;
     timer_config.enabled = 1;
-    initialize_TIMER(timer_config);
+    initialize_Timer(timer_config);
 
     uart_config.which_uart = UART_CH_1;
     uart_config.pb_clk = PB_CLK;
@@ -105,7 +100,7 @@ int main(void) {
     uart_config.tx_en = 1;
 
     packet_config.control_byte = 0x0A;
-    packet_config.which_channel = PACKET_UART1;
+    packet_config.which_channel = PACKET_UART_CH_1;
     packet_config.uart_config = uart_config;
  
     //Global interrupt enable. Do this last!
@@ -132,7 +127,7 @@ void timer_callback(void)
     node.mode = READ;
     node.callback = &i2c_callback;
 
-    send_I2C(I2C1, node);
+    send_I2C(I2C_CH_1, node);
 }
 
 void i2c_callback(I2C_Node node)
@@ -148,5 +143,5 @@ void i2c_callback(I2C_Node node)
     }    
 
     //send the packet
-    send_packet(PACKET_UART1, send_data, sizeof(send_data));
+    send_packet(PACKET_UART_CH_1, send_data, sizeof(send_data));
 }

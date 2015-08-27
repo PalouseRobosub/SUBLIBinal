@@ -11,9 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../Timer.h"
-#include "../SPI.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  System Includes
@@ -81,11 +79,10 @@ int main(void) {
 
     //setup peripherals
     timer_config.which_timer = Timer_1;
-    timer_config.divide = Div_256;
-    timer_config.period = 50000;
+    timer_config.frequency = 1000;
     timer_config.callback = &timer_callback;
     timer_config.enabled = 1;
-    initialize_TIMER(timer_config);
+    initialize_Timer(timer_config);
 
     spi_config.which_spi = SPI_CH_1;
     spi_config.pb_clk = PB_CLK;

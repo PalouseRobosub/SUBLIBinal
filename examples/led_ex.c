@@ -11,10 +11,7 @@
 /*************************************************************************
  System Includes
  ************************************************************************/
-#include "../System.h"
-#include "../SPI.h"
-#include "../packetizer.h"
-#include "../UART.h"
+#include "sublibinal.h"
 
 /*************************************************************************
  System Includes
@@ -101,7 +98,7 @@ int main(void) {
     uart_config.rx_buffer_size = sizeof(uart_rx_buffer);
     uart_config.rx_en = 1;
 
-    packet_config.which_channel = PACKET_UART1;
+    packet_config.which_channel = PACKET_UART_CH_1;
     packet_config.control_byte = 0x0A;
     packet_config.callback = &interpret_packet;
     packet_config.uart_config = uart_config;
