@@ -1,1 +1,10 @@
 
+#mplabx projects
+/**/*.X/*
+!/**/*.X/nbproject/
+!/**/*.X/Makefile
+/**/*.X/nbproject/*
+!/**/*.X/nbproject/configurations.xml
+!/**/*.X/nbproject/project.xml
+!/**/*.X/nbproject/project.properties
+
