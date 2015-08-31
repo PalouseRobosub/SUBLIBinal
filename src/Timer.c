@@ -80,7 +80,7 @@ void initialize_Timer(Timer_Config config) {
             //determine the divider for a type A timer
             switch (div) {
                 case Div_1:
-                    T1CONbits.TCKPS = 0; //1:8 is closest scaler
+                    T1CONbits.TCKPS = 0; //1:1 is closest scaler
                     PR1 = period;
                     break;
                 case Div_2:
@@ -231,6 +231,173 @@ void disable_timer(Timer_Type which_timer)
             break;
     }
 }
+
+
+void update_period_Timer(Timer_Config timer, int period) {\
+    if (period < 1) {
+        period = 1;
+    }   
+
+    switch (timer.which_timer) {
+        case Timer_1:
+            PR1 = period
+            TMR1 = 0;
+            break;
+        case Timer_2:
+            PR2 = period;
+            TMR2 = 0;
+            break;
+        case Timer_3:
+            PR3 = period;
+            TMR3 = 0;
+            break;
+        case Timer_4:
+            PR4 = period;
+            TMR4 = 0;
+            break;
+        case Timer_5:
+            PR5 = period;
+            TMR5 = 0;
+            break;
+    }
+}
+void update_frequency_Timer(Timer_Config timer, float frequency) {
+    //determine the best divider based upon desired frequency
+    Clock_Divider div;
+    int period;
+    //first,we will determine the best clock divider to use based upon max PR size, this will give us highest accuracy
+    if (frequency  > (float)timer.pbclk/65535) {
+        //we can use Div_1
+        div = Div_1;
+        period = timer.pbclk/(frequency*1);
+    } else if (frequency > (float)timer.pbclk/(65535*2)){
+        //div 2 is best
+        div = Div_2;
+        period = timer.pbclk/(frequency*2);
+    } else if (frequency > (float)timer.pbclk/(65535*4)) {
+        //div 4
+        div = Div_4;
+        period = timer.pbclk/(frequency*4);
+    } else if(frequency > (float)timer.pbclk/(65535*8)) {
+        //div 8
+        div = Div_8;
+        period = timer.pbclk/(frequency*8);
+    } else if (frequency > (float)timer.pbclk/(65535*16)) {
+        //div 16
+        div = Div_16;
+        period = timer.pbclk/(frequency*16);
+    } else if (frequency > (float)timer.pbclk/(65535*32)) {
+        //div 32
+        div = Div_32;
+        period = timer.pbclk/(frequency*32);
+    } else if (frequency > (float)timer.pbclk/(65535*64)) {
+        //div 64
+        div = Div_64;
+        period = timer.pbclk/(frequency*64);
+    } else {
+        //div 256
+        div = Div_256;
+        period = timer.pbclk/(frequency*256);
+    }
+    
+    switch (timer.which_timer) {
+        case Timer_1://determine the divider for a type A timer
+            switch (div) {
+                case Div_1:
+                    T1CONbits.TCKPS = 0; //1:1 is closest scaler
+                    PR1 = period;
+                    break;
+                case Div_2:
+                    
+                    T1CONbits.TCKPS = 0b1; //1:8 is closest scaler
+                    PR1 = period/4;
+                    break;
+                case Div_4:
+                    T1CONbits.TCKPS = 0b1; //1:8 is closest scaler
+                    PR1 = period/2;
+                    break;
+                case Div_8:
+                    T1CONbits.TCKPS = 0b1; //1:8 
+                    PR1 = period;
+                    break;
+                case Div_16:
+                    T1CONbits.TCKPS = 0b10; //1:64 is closest scaler
+                    PR1 = period/4;
+                    break;
+                case Div_32:
+                    T1CONbits.TCKPS = 0b10; //1:64 is closest scaler
+                    PR1 = period/2;
+                    break;
+                case Div_64:
+                    T1CONbits.TCKPS = 0b10; //1:64
+                    PR1 = period;
+                    break;
+                case Div_256:
+                    T1CONbits.TCKPS = 0b11; //1:256
+                    PR1 = period;
+                    break;
+            }
+            break;
+        case Timer_2:
+            PR2 = period;
+            T2CONbits.TCKPS = div;
+            TMR2 = 0;
+            break;
+        case Timer_3:
+            PR3 = period;
+            T3CONbits.TCKPS = div;
+            TMR3 = 0;
+            break;
+        case Timer_4:
+            PR4 = period;
+            T4CONbits.TCKPS = div;
+            TMR4 = 0;
+            break;
+        case Timer_5:
+            PR5 = period;
+            T5CONbits.TCKPS = div;
+            TMR5 = 0;
+            break;
+    }
+}
+void update_divider_Timer(Timer_Config timer, Clock_Divider div) {
+    
+    switch (timer.which_timer) {
+        case Timer_1:
+            switch (div) {
+                case Div_1:
+                    T1CONbits.TCKPS = 0;
+                    break;
+                case Div_2:
+                case Div_4:
+                case Div_8:
+                    T1CONbits.TCKPS = 0b1;
+                    break;
+                case Div_16:
+                case Div_32:
+                case Div_64:
+                    T1CONbits.TCKPS = 0b10;
+                    break;
+                case Div_256:
+                    T1CONbits.TCKPS = 0b11;
+                    break;
+            }
+            break;
+        case Timer_2:
+            T2CONbits.TCKPS = div;
+            break;
+        case Timer_3:
+            T3CONbits.TCKPS = div;
+            break;
+        case Timer_4:
+            T4CONbits.TCKPS = div;
+            break;
+        case Timer_5:
+            T5CONbits.TCKPS = div;
+            break;
+    }
+}
+    
 
 void __ISR(_TIMER_1_VECTOR, IPL7AUTO) Timer_Handler_1(void) {
     asm volatile ("di"); //disable interrupt

@@ -76,6 +76,10 @@ extern "C" {
      */
     void disable_Timer(Timer_Type which_timer);
 
+    
+    void update_period_Timer(Timer_Config timer, int period);
+    void update_frequency_Timer(Timer_Config timer, float frequency);
+    void update_divider_Timer(Timer_Config timer, Clock_Divider div);
 
 
 
