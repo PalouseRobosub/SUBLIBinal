@@ -1,6 +1,6 @@
 
 /********************************************************
- *   File Name: timer_ex.c
+ *   File Name: i2c_ex.c
  *
  *   Description:
  *              Main file
@@ -78,30 +78,33 @@ int main(void) {
     uint8 uart_tx_buffer[128], uart_rx_buffer[128];
 
     //structures for configuring peripherals
-    UART_Config uart_config;
-    Timer_Config timer_config;
-    Packetizer_Config packet_config;
+    UART_Config uart_config = {0};
+    Timer_Config timer_config = {0};
+    Packetizer_Config packet_config = {0};
     
     //temp buffer
     uint8 blah;
 
     //setup peripherals
-    timer_config.frequency = 1000;
-    timer_config.which_timer = Timer_1;
-    timer_config.callback = &timer_callback;
-    timer_config.enabled = 1;
-    initialize_Timer(timer_config);
+    timer_config.frequency = 1000; //Set the timer to 1KHz
+    timer_config.which_timer = Timer_1; //Specify timer 1 as our selected device
+    timer_config.callback = &timer_callback; //Specify the timer callback function
+    timer_config.enabled = 1; //enable the timer
+    initialize_Timer(timer_config); //Initialize the timer with our specifications
 
-    uart_config.which_uart = UART_CH_1;
-    uart_config.pb_clk = PB_CLK;
-    uart_config.speed = 115200;
-    uart_config.tx_buffer_ptr = uart_tx_buffer;
-    uart_config.tx_buffer_size = sizeof(uart_tx_buffer);
-    uart_config.tx_en = 1;
+    uart_config.which_uart = UART_CH_1; //Specify uart channel 1 for our use
+    uart_config.pb_clk = PB_CLK; //tell the module the clock speed
+    uart_config.speed = 115200; //inform the module of the desired baud rate
+    uart_config.tx_buffer_ptr = uart_tx_buffer; //Provide a pointer to a data buffer
+    uart_config.tx_buffer_size = sizeof(uart_tx_buffer); //provide the size of the data buffer
+    uart_config.tx_en = 1; //enable the uart
+    initialize_UART(uart_config); //initialize the uart module
 
-    packet_config.control_byte = 0x0A;
-    packet_config.which_channel = PACKET_UART_CH_1;
-    packet_config.uart_config = uart_config;
+    packet_config.control_byte = 0x0A; //set the control byte for the packetizer
+    packet_config.which_channel = PACKET_UART_CH_1; //specify use of UART channel 1 for the packetizer
+    packet_config.uart_config = uart_config; //specify the UART configuration to reference
+    packet_config.callback = NULL; //Set there to be no callback
+    initialize_packetizer(packet_config); //Initialize the packetizer module
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();
@@ -117,17 +120,17 @@ int main(void) {
 
 void timer_callback(void)
 {
-    I2C_Node node;
+    I2C_Node node = {0};
 
-    node.device_id = 0x01; //arbitrary-ish
-    node.device_address = 0x45; //address of the sensor
-    node.sub_address = 0x12; //sub address on sensor to read
-    node.data_buffer = sensor_data;
-    node.data_size = 6; //reading 6 bytes
-    node.mode = READ;
-    node.callback = &i2c_callback;
+    node.device_id = 0x01; //arbitrary-ish device ID for clarification of data results
+    node.device_address = 0x45; //address of the sensor that we are talking to
+    node.sub_address = 0x12; //sub address on sensor to read in the sensors memory
+    node.data_buffer = sensor_data; //provide a buffer to some data for the sensor, data must remain in scope!!!
+    node.data_size = 6; //reading 6 bytes from the sensor
+    node.mode = READ; //we are reading and not writing
+    node.callback = &i2c_callback; //provide a callback for the data
 
-    send_I2C(I2C_CH_1, node);
+    send_I2C(I2C_CH_1, node); //enqueue a read of the device on the I2C
 }
 
 void i2c_callback(I2C_Node node)

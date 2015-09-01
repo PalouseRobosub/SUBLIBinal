@@ -1,6 +1,6 @@
 
 /********************************************************
- *   File Name: timer_ex.c
+ *   File Name: uart_ex.c
  *
  *   Description:
  *              Main file
@@ -81,22 +81,22 @@ int main(void) {
     uint8 blah;
 
     //setup peripherals
-    timer_config.frequency = 1000;
-    timer_config.which_timer = Timer_1;
-    timer_config.callback = &timer_callback;
-    timer_config.enabled = 1;
-    initialize_Timer(timer_config);
+    timer_config.frequency = 1000; //Set the timer to operate at 1KHz
+    timer_config.which_timer = Timer_1; //Use timer 1
+    timer_config.callback = &timer_callback; //Hand a callback function for the ISR functionality
+    timer_config.enabled = 1; //Enable the timer
+    initialize_Timer(timer_config); //Initialize the timer module
 
-    uart_config.which_uart = UART_CH_1;
-    uart_config.pb_clk = PB_CLK;
-    uart_config.speed = 115200;
-    uart_config.rx_buffer_ptr = uart_rx_buffer;
-    uart_config.rx_buffer_size = sizeof(uart_rx_buffer);
-    uart_config.rx_en = 1;
-    uart_config.tx_buffer_ptr = uart_tx_buffer;
-    uart_config.tx_buffer_size = sizeof(uart_tx_buffer);
-    uart_config.tx_en = 1;
-    initialize_UART(uart_config);
+    uart_config.which_uart = UART_CH_1; //Specify UART channel 1 for us
+    uart_config.pb_clk = PB_CLK; //Tell the module the speed of our clock
+    uart_config.speed = 115200; //Specify the buadrate to be 115.2k
+    uart_config.rx_buffer_ptr = uart_rx_buffer; //Hand a pointer to some memory for the UART
+    uart_config.rx_buffer_size = sizeof(uart_rx_buffer); //Tell the UART the size of this memory
+    uart_config.rx_en = 1; //Enable receiving
+    uart_config.tx_buffer_ptr = uart_tx_buffer; //Hand a data pointer to the transmission buffer
+    uart_config.tx_buffer_size = sizeof(uart_tx_buffer); //Tell the UART the size of the transmission buffer
+    uart_config.tx_en = 1; //Enable transmission
+    initialize_UART(uart_config); //Initialize the UART module
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();

@@ -69,11 +69,11 @@ int main(void) {
     Timer_Config timer_config;
 
     //setup peripherals
-    timer_config.frequency = 1000;
-    timer_config.which_timer = Timer_1;
-    timer_config.callback = &timer_callback;
-    timer_config.enabled = 1;
-    initialize_Timer(timer_config);
+    timer_config.frequency = 1000; //Have the timer trigger at a rate of 1KHz
+    timer_config.which_timer = Timer_1; //Use Timer 1
+    timer_config.callback = &timer_callback; //Hand a callback function for the ISR
+    timer_config.enabled = 1; //Enable the Timer
+    initialize_Timer(timer_config); //Initialize the timer module
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();

@@ -1,6 +1,6 @@
 
 /********************************************************
- *   File Name: timer_ex.c
+ *   File Name: spi_ex.c
  *
  *   Description:
  *              Main file
@@ -74,24 +74,24 @@ int main(void) {
     uint8 spi_tx_buffer[128];
 
     //structures for configuring peripherals
-    SPI_Config spi_config;
-    Timer_Config timer_config;
+    SPI_Config spi_config = {0};
+    Timer_Config timer_config = {0};
 
     //setup peripherals
-    timer_config.which_timer = Timer_1;
-    timer_config.frequency = 1000;
-    timer_config.callback = &timer_callback;
-    timer_config.enabled = 1;
-    initialize_Timer(timer_config);
+    timer_config.which_timer = Timer_1; //Specify that we will be using timer 1
+    timer_config.frequency = 1000; //Specify that the timer operates at 1KHz
+    timer_config.callback = &timer_callback; //Link a callback function for the ISR
+    timer_config.enabled = 1; //Enable the Timer
+    initialize_Timer(timer_config); //Initialize the Timer
 
-    spi_config.which_spi = SPI_CH_1;
-    spi_config.pb_clk = PB_CLK;
-    spi_config.speed = 100000;
-    spi_config.tx_en = 1;
-    spi_config.clk_edge = 0;
-    spi_config.tx_buffer_ptr = spi_tx_buffer;
-    spi_config.tx_buffer_size = sizeof(spi_tx_buffer);
-    initialize_SPI(spi_config);
+    spi_config.which_spi = SPI_CH_1; //Specify that we will use SPI Channel 1
+    spi_config.pb_clk = PB_CLK; //Tell the module the speed of our clock, 15MHz
+    spi_config.speed = 100000; //Tell SPI module the frequency that we are talking at, 100KHz
+    spi_config.tx_en = 1; //Enable the SPI module
+    spi_config.clk_edge = falling; //Specify that SPI transition from a high to low transition
+    spi_config.tx_buffer_ptr = spi_tx_buffer; //Hand a pointer to the data buffer
+    spi_config.tx_buffer_size = sizeof(spi_tx_buffer); //tell it the size of the data buffer
+    initialize_SPI(spi_config); //Initialize the SPI module
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();
@@ -112,7 +112,7 @@ void timer_callback(void)
     data[1] = 'b';
     data[2] = 'c';
 
-    //send some uart data
+    //send some SPI data
     send_SPI(SPI_CH_1, data, sizeof(data));
     
     
