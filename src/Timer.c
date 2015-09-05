@@ -337,7 +337,8 @@ void update_frequency_Timer(Timer_Config timer, float frequency) {
                     PR1 = period;
                     break;
             }
-            break;
+			TMR1 = 0;
+			break;
         case Timer_2:
             PR2 = period;
             T2CONbits.TCKPS = div;
