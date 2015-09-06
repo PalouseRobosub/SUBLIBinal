@@ -66,7 +66,7 @@ void timer_callback(void);
 int main(void) {
 
     //structures for configuring peripherals
-    Timer_Config timer_config;
+    Timer_Config timer_config = {0};
 
     //setup peripherals
     timer_config.frequency = 1000; //Have the timer trigger at a rate of 1KHz
