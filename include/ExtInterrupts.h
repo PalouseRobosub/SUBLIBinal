@@ -12,7 +12,6 @@
 extern "C" {
 #endif
     #include "PPS.h"
-    typedef int Ext_Int;
 
     typedef enum {
         INT0,

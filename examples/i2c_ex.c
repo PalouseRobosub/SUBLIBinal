@@ -76,11 +76,13 @@ int main(void) {
 
     //buffer for uart ISRs
     uint8 uart_tx_buffer[128], uart_rx_buffer[128];
+    uint8 i2c_tx_buffer[128], i2c_rx_buffer[128];
 
     //structures for configuring peripherals
     UART_Config uart_config = {0};
     Timer_Config timer_config = {0};
     Packetizer_Config packet_config = {0};
+    I2C_Config i2c_config = {0};
     
     //temp buffer
     uint8 blah;
@@ -105,6 +107,15 @@ int main(void) {
     packet_config.uart_config = uart_config; //specify the UART configuration to reference
     packet_config.callback = NULL; //Set there to be no callback
     initialize_packetizer(packet_config); //Initialize the packetizer module
+    
+    i2c_config.callback = NULL; //No I2C callback function
+    i2c_config.channel = I2C_CH_1; //Using I2C channel 1
+    i2c_config.pb_clk = PB_CLK; //specify the peripheral bus clock
+    i2c_config.rx_buffer_ptr = i2c_rx_buffer; //provide a pointer to rx buffer
+    i2c_config.rx_buffer_size = sizeof(i2c_rx_buffer); //provide size of rx buffer
+    i2c_config.tx_buffer_ptr = i2c_tx_buffer; //provide a pointer to the tx buffer
+    i2c_config.tx_buffer_size = sizeof(i2c_tx_buffer); //provide the size of the tx buffer
+    initialize_I2C(i2c_config); //initialize the I2C
  
     //Global interrupt enable. Do this last!
     INTEnableSystemMultiVectoredInt();
