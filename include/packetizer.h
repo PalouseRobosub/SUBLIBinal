@@ -34,7 +34,7 @@ extern "C" {
     typedef struct PACKETIZER_CONFIG {
         Data_Channel which_channel; ///< The data channel to packetize for
         uint8 control_byte; ///< The control byte to use for the packet
-        void (*callback); ///< ????????
+        void (*callback) (uint8* data, uint8 data_size); ///< ????????
         UART_Config uart_config; ///< Configuration for a UART channel
     }Packetizer_Config; ///< The configuration struct for the Packetizer
 

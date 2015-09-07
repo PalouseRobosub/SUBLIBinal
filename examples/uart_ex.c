@@ -74,8 +74,8 @@ int main(void) {
     uint8 uart_tx_buffer[128], uart_rx_buffer[128];
 
     //structures for configuring peripherals
-    UART_Config uart_config;
-    Timer_Config timer_config;
+    UART_Config uart_config = {0};
+    Timer_Config timer_config = {0};
     
     //temp buffer
     uint8 blah;
