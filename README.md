@@ -7,4 +7,4 @@ It uses a lightweight interrupt-based architecture, taking advantage of the hard
 
 It is designed specfically for use with the Microchip PIC32MX250F128B. Porting to other microcontrollers is possible, but we do not plan to expand support to other microcontrollers at this time.
 
-We plan to add documentation to the wiki page, but for now, take a look at the [examples directory](https://github.com/PalouseRobosub/SUBLIBinal/tree/master/examples) for usage examples.
+Please refer to the [wiki](https://github.com/PalouseRobosub/SUBLIBinal/wiki) for documentation on how to use SUBLIBinal. to find code examples, please look in the [examples directory](https://github.com/PalouseRobosub/SUBLIBinal/tree/master/examples) for usage examples.
