@@ -69,7 +69,7 @@ void send_packet(Data_Channel which_channel, uint8* data, uint8 data_size) {
     __builtin_set_isr_state(interrupt_state);
 }
 
-void packetizer_background_process(Data_Channel which_channel) {
+void bg_process_packetizer(Data_Channel which_channel) {
     uint8 current_byte;
     uint8 status;
 

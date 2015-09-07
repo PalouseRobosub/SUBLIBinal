@@ -56,7 +56,7 @@ extern "C" {
      * Checks if the channel has received a packet then triggers the appropriate action
      * \param which_channel The channel to watch in the process
      */
-    void packetizer_background_process(Data_Channel which_channel);
+    void bg_process_packetizer(Data_Channel which_channel);
 #ifdef	__cplusplus
 }
 #endif
