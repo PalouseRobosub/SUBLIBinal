@@ -74,7 +74,7 @@ int main(void) {
     timer_configuration.enabled = TRUE; //enable the timer when we initialize it
     timer_configuration.frequency = 1000; //Run the timer at 1 KHz frequency
     timer_configuration.pbclk = PB_CLK; //Tell the function our PB_CLK is 15MHz
-    timer_configuration.which_timer = Timer_1; //Use timer 1 for this timer
+    timer_configuration.which_timer = Timer_2; //Use timer 1 for this timer
     initialize_Timer(timer_configuration); //initialize and start the timer
     
     //specify parameters of the PWM module

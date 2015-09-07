@@ -65,6 +65,7 @@
 
 //forward declarations
 void timer_callback(void);
+void packetizer_callback(uint8* data, uint8 size);
 
 /*************************************************************************
  Main Function
@@ -109,7 +110,7 @@ int main(void) {
     
     
     //Configure the packetizer
-    packetizer_config.callback = NULL; //There will be no callback associated with the packetizer. It is unnecessary
+    packetizer_config.callback = &packetizer_callback; //There will be no callback associated with the packetizer. It is unnecessary
     packetizer_config.control_byte = '!'; //We will use the exclamation point character as our control byte.
     packetizer_config.uart_config = uart_config; //we must hand the packetizer the uart configuration for proper set up
     packetizer_config.which_channel = PACKET_UART_CH_1; //our packetizer is running on uart channel 1
@@ -120,17 +121,20 @@ int main(void) {
     asm volatile ("ei"); //reenable interrupts
 
     while (1) {
-        //one byte is put in the 'blah' buffer by calling receive_UART
-        if (receive_UART(UART_CH_1, &blah, sizeof(blah)) == ERR_NO_ERR) //if we successfully pulled out some data
-        {
-            //do something with the data
-            send_UART(UART_CH_1, &blah, sizeof(blah));
-        }
+        bg_process_packetizer();
     }
 
     return 0;
 }
 
+
+void packetizer_callback(uint8 * data, uint8 size) {
+    //packetizer callback
+    
+    //simply echo the packet back across the UART communication channel as a heartbeat
+    send_packet(PACKET_UART_CH_1, data, size);
+    
+}
 void timer_callback(void)
 {
     uint8 data[3];
