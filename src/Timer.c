@@ -240,7 +240,7 @@ void update_period_Timer(Timer_Config timer, int period) {\
 
     switch (timer.which_timer) {
         case Timer_1:
-            PR1 = period
+            PR1 = period;
             TMR1 = 0;
             break;
         case Timer_2:
