@@ -86,9 +86,16 @@ int main(void) {
     
     //temp buffer
     uint8 blah;
+    
+    //peripheral pin select for UART
+    ANSELA = ANSELB = 0;
+    RPB15R = 1; //RPB15 is U1TX
+    TRISBbits.TRISB13 = 1;
+    U1RXR = 0b11; //RPB13 is U1RX
 
     //setup peripherals
     timer_config.frequency = 1000; //Set the timer to 1KHz
+    timer_config.pbclk = PB_CLK; //Specify the speed of the peripheral bus clock
     timer_config.which_timer = Timer_1; //Specify timer 1 as our selected device
     timer_config.callback = &timer_callback; //Specify the timer callback function
     timer_config.enabled = 1; //enable the timer
