@@ -80,6 +80,7 @@ int main(void) {
     //setup peripherals
     timer_config.which_timer = Timer_1; //Specify that we will be using timer 1
     timer_config.frequency = 1000; //Specify that the timer operates at 1KHz
+    timer_config.pbclk = PB_CLK; //specify the speed of the peripheral bus clock
     timer_config.callback = &timer_callback; //Link a callback function for the ISR
     timer_config.enabled = 1; //Enable the Timer
     initialize_Timer(timer_config); //Initialize the Timer
