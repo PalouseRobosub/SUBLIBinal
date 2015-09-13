@@ -87,9 +87,16 @@ int main(void) {
     
     //temp buffer
     uint8 blah;
+    
+    //peripheral pin select for UART
+    ANSELA = ANSELB = 0;
+    RPB15R = 1; //RPB15 is U1TX
+    TRISBbits.TRISB13 = 1;
+    U1RXR = 0b11; //RPB13 is U1RX
 
     //setup timer peripheral
     timer_config.frequency = 1000; //We will set our timer to fire at 1 KHz
+    timer_config.pbclk = PB_CLK; //Specify peripheral bus clock speed
     timer_config.which_timer = Timer_1; //We will use timer_1, a type A timer
     timer_config.callback = &timer_callback; //we will set the callback to the timer_callback function
                                              //Any time the timer triggers an interrupt, this function will be called.
@@ -121,7 +128,7 @@ int main(void) {
     asm volatile ("ei"); //reenable interrupts
 
     while (1) {
-        bg_process_packetizer();
+        bg_process_packetizer(PACKET_UART_CH_1);
     }
 
     return 0;
