@@ -219,6 +219,7 @@ Error enable_timer(Timer_Type which_timer)
             }
             break;
     }
+    return ERR_NO_ERR;
 }
 
 Error disable_timer(Timer_Type which_timer)
@@ -250,6 +251,8 @@ Error disable_timer(Timer_Type which_timer)
             IEC0bits.T5IE = 0;
             break;
     }
+    
+    return ERR_NO_ERR;
 }
 
 
