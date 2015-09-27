@@ -60,6 +60,69 @@ UART_Data* initialize_UART(UART_Config config) {
             uart_1_rx_callback = config.rx_callback;
 
             u1.Tx_is_idle = TRUE;
+            
+            //set the peripheral pin select
+            if (config.rx_en)
+            {
+                switch (config.rx_pin) {
+                    case Pin_RPA2:
+                        TRISAbits.TRISA2 = 1; //input
+                        U1RXR = 0;
+                        break;
+                    case Pin_RPB6:
+                        TRISB |= 1<<6; //input
+                        U1RXR = 1;
+                        break;
+                    case Pin_RPA4:
+                        TRISAbits.TRISA4 = 1; //input
+                        U1RXR = 2;
+                        break;
+                    case Pin_RPB13:
+                        TRISBbits.TRISB13 = 1; //input
+                        ANSELBbits.ANSB13 = 0; //disable analog
+                        U1RXR = 3;
+                        break;
+                    case Pin_RPB2:
+                        TRISBbits.TRISB2 = 1// input
+                        ANSELBbits.ANSB2 = 0; //disable analog
+                        U1RXR = 4;
+                        break;
+                    default:
+                        //Error
+                        break;
+                        
+                           
+                }
+            }
+            
+            if (config.tx_en)
+            {
+                switch (config.tx_pin) {
+                    case Pin_RPA0:
+                        RPA0R = 1; //U1TX
+                        TRISAbits.TRISA0 = 0; //output
+                        break;
+                    case Pin_RPB3:
+                        RPB3R = 1; //U1TX
+                        TRISBbits.TRISB3 = 0; //output
+                        break;
+                    case Pin_RPB4:
+                        RPB4R = 1; //U1TX
+                        TRISBbits.TRISB4 = 0; //output
+                        break;
+                    case Pin_RPB15:
+                        RPB15R = 1; //U1TX
+                        TRISBbits.TRISB15 = 0; //output
+                        break;
+                    case Pin_RPB7:
+                        RPB7R = 1; //U1TX
+                        TRISBbits.TRISB7 = 0; //output
+                        break;
+                    default:
+                        //error
+                        break;
+                }
+            }
 
             return &u1;
             break;
@@ -89,6 +152,70 @@ UART_Data* initialize_UART(UART_Config config) {
             uart_2_rx_callback = config.rx_callback;
 
             u2.Tx_is_idle = TRUE;
+            
+            //set the peripheral pin select
+            if (config.rx_en)
+            {
+                switch (config.rx_pin) {
+                    case Pin_RPA1:
+                        TRISAbits.TRISA1 = 1; //input
+                        ANSELAbits.ANSA1 = 0; //disable analog
+                        U2RXR = 0;
+                        break;
+                    case Pin_RPB5:
+                        TRISB |= 1<<5; //input
+                        U2RXR = 1;
+                        break;
+                    case Pin_RPB1:
+                        TRISBbits.TRISB1 = 1; //input
+                        ANSELBbits.ANSB1 = 0; //disable analog
+                        U2RXR = 2;
+                        break;
+                    case Pin_RPB11:
+                        TRISBbits.TRISB11 = 1; //input
+                        U2RXR = 3;
+                        break;
+                    case Pin_RPB8:
+                        TRISBbits.TRISB8 = 1// input
+                        U2RXR = 4;
+                        break;
+                    default:
+                        //Error
+                        break;
+                        
+                           
+                }
+            }
+            
+            if (config.tx_en)
+            {
+                switch (config.tx_pin) {
+                    case Pin_RPA3:
+                        RPA3R = 2; //U1TX
+                        TRISAbits.TRISA3 = 0; //output
+                        break;
+                    case Pin_RPB14:
+                        RPB14R = 2; //U1TX
+                        TRISBbits.TRISB14 = 0; //output
+                        break;
+                    case Pin_RPB0:
+                        RPB0R = 2; //U1TX
+                        TRISBbits.TRISB0 = 0; //output
+                        break;
+                    case Pin_RPB10:
+                        RPB10R = 2; //U1TX
+                        TRISBbits.TRISB10 = 0; //output
+                        break;
+                    case Pin_RPB9:
+                        RPB9R = 2; //U1TX
+                        TRISBbits.TRISB9 = 0; //output
+                        break;
+                    default:
+                        //error
+                        break;
+                }
+            }
+            
             return &u2;
             break;
 
