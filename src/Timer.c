@@ -34,9 +34,10 @@ void (*timer_5_callback) (void);
 //function_ptr is the ISR function pointer
 //enable specifies whether to enable the interrupt or not
 
-void initialize_Timer(Timer_Config config) {
+Error initialize_Timer(Timer_Config config) {
     
     //determine the best divider based upon desired frequency
+    Error ret = ERR_NO_ERR;
     Clock_Divider div;
     int period;
     //first,we will determine the best clock divider to use based upon max PR size, this will give us highest accuracy
@@ -68,10 +69,15 @@ void initialize_Timer(Timer_Config config) {
         //div 64
         div = Div_64;
         period = config.pbclk/(config.frequency*64);
-    } else {
+    } else if (config.frequency > (float)config.pbclk/(65535*256)){
         //div 256
         div = Div_256;
         period = config.pbclk/(config.frequency*256);
+    } else {
+        //set a warning, as the desire frequency was not achieved. Maximize the period
+        div = Div_256;
+        period = 65535;
+        ret = ERR_TIMER_FREQ_UNATTAINABLE;
     }
 
     //switch case to determine which timer we are working with
@@ -166,6 +172,8 @@ void initialize_Timer(Timer_Config config) {
             T5CONbits.ON = config.enabled; //actually turn the timer on
             break;
     }
+    
+    return ret;
 }
 
 void enable_timer(Timer_Type which_timer)
@@ -233,10 +241,16 @@ void disable_timer(Timer_Type which_timer)
 }
 
 
-void update_period_Timer(Timer_Config timer, int period) {\
+Error update_period_Timer(Timer_Config timer, int period) {
+    Error ret = ERR_NO_ERR;
     if (period < 1) {
         period = 1;
+        ret = ERR_INVALID_PERIOD;
     }   
+    if (period > 65535) {
+        period = 65535;
+        ret = ERR_INVALID_PERIOD;
+    }
 
     switch (timer.which_timer) {
         case Timer_1:
@@ -260,10 +274,13 @@ void update_period_Timer(Timer_Config timer, int period) {\
             TMR5 = 0;
             break;
     }
+    
+    return ret;
 }
-void update_frequency_Timer(Timer_Config timer, float frequency) {
+Error update_frequency_Timer(Timer_Config timer, float frequency) {
     //determine the best divider based upon desired frequency
     Clock_Divider div;
+    Error ret = ERR_NO_ERR;
     int period;
     //first,we will determine the best clock divider to use based upon max PR size, this will give us highest accuracy
     if (frequency  > (float)timer.pbclk/65535) {
@@ -294,12 +311,16 @@ void update_frequency_Timer(Timer_Config timer, float frequency) {
         //div 64
         div = Div_64;
         period = timer.pbclk/(frequency*64);
-    } else {
+    } else if (timer.frequency > (float)timer.pbclk/(65535*256)){
         //div 256
         div = Div_256;
-        period = timer.pbclk/(frequency*256);
+        period = timer.pbclk/(timer.frequency*256);
+    } else {
+        //set a warning, as the desire frequency was not achieved. Maximize the period
+        div = Div_256;
+        period = 65535;
+        ret = ERR_TIMER_FREQ_UNATTAINABLE;
     }
-    
     switch (timer.which_timer) {
         case Timer_1://determine the divider for a type A timer
             switch (div) {
@@ -360,9 +381,11 @@ void update_frequency_Timer(Timer_Config timer, float frequency) {
             TMR5 = 0;
             break;
     }
-}
-void update_divider_Timer(Timer_Config timer, Clock_Divider div) {
     
+    return ret;
+}
+Error update_divider_Timer(Timer_Config timer, Clock_Divider div) {
+    Error ret = ERR_NO_ERR;
     switch (timer.which_timer) {
         case Timer_1:
             switch (div) {
@@ -371,11 +394,13 @@ void update_divider_Timer(Timer_Config timer, Clock_Divider div) {
                     break;
                 case Div_2:
                 case Div_4:
+                    ret = ERR_INVALID_DIVIDER;
                 case Div_8:
                     T1CONbits.TCKPS = 0b1;
                     break;
                 case Div_16:
                 case Div_32:
+                    ret = ERR_INVALID_DIVIDER;
                 case Div_64:
                     T1CONbits.TCKPS = 0b10;
                     break;
@@ -397,6 +422,8 @@ void update_divider_Timer(Timer_Config timer, Clock_Divider div) {
             T5CONbits.TCKPS = div;
             break;
     }
+    
+    return ret;
 }
     
 

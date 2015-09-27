@@ -33,6 +33,13 @@ extern "C" {
     /// \enum Error Defines the possible communcation errors
     typedef enum {
         ERR_NO_ERR, //not an error
+                
+        //Timer Errors
+                ERR_TIMER_FREQ_UNATTAINABLE,
+                ERR_INVALID_DIVIDER,
+                ERR_INVALID_PERIOD,
+                
+                
         ERR_INVALID_SEND,
         ERR_QUEUE_FULL, //queue is full
         ERR_QUEUE_INVALID_READ,
