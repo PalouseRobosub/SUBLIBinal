@@ -11,7 +11,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    #include "PPS.h"
+    #include "System.h"
 
     typedef enum {
         INT0,

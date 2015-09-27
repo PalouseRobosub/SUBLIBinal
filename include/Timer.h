@@ -27,11 +27,11 @@ extern "C" {
 
     ///\enum Timer_Type All possible timers
     typedef enum {
-        Timer_1,
-        Timer_2,
-        Timer_3,
-        Timer_4,
-        Timer_5
+        Timer_1 =2,
+        Timer_2 =3,
+        Timer_3 =4,
+        Timer_4 =5,
+        Timer_5 =6
     } Timer_Type;
 
     typedef struct TIMER_CONFIG {
@@ -68,13 +68,13 @@ extern "C" {
      * Enables a timer
      * \param which_timer The timer to enable
      */
-    void enable_Timer(Timer_Type which_timer);
+    Error enable_Timer(Timer_Type which_timer);
 
     /**
      * Disables a timer
      * \param which_timer The timer to disable
      */
-    void disable_Timer(Timer_Type which_timer);
+    Error disable_Timer(Timer_Type which_timer);
 
     
     Error update_period_Timer(Timer_Config timer, int period);

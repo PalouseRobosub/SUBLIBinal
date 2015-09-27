@@ -40,6 +40,10 @@ Error initialize_Timer(Timer_Config config) {
     Error ret = ERR_NO_ERR;
     Clock_Divider div;
     int period;
+    
+    //verify valid timer enumeration
+    if (config.which_timer < Timer_1 || config.which_timer > Timer_5) return ERR_INVALID_ENUM;
+    
     //first,we will determine the best clock divider to use based upon max PR size, this will give us highest accuracy
     if (config.frequency  > (float)config.pbclk/65535) {
         //we can use Div_1
@@ -176,8 +180,12 @@ Error initialize_Timer(Timer_Config config) {
     return ret;
 }
 
-void enable_timer(Timer_Type which_timer)
+Error enable_timer(Timer_Type which_timer)
 {
+    
+    //verify valid timer enumeration
+    if (which_timer < Timer_1 || which_timer > Timer_5) return ERR_INVALID_ENUM;
+    
     switch(which_timer)
     {
         case Timer_1:
@@ -213,8 +221,12 @@ void enable_timer(Timer_Type which_timer)
     }
 }
 
-void disable_timer(Timer_Type which_timer)
+Error disable_timer(Timer_Type which_timer)
 {
+    
+    //verify valid timer enumeration
+    if (which_timer < Timer_1 || which_timer > Timer_5) return ERR_INVALID_ENUM;
+    
     switch(which_timer)
     {
         case Timer_1:
@@ -243,6 +255,10 @@ void disable_timer(Timer_Type which_timer)
 
 Error update_period_Timer(Timer_Config timer, int period) {
     Error ret = ERR_NO_ERR;
+    
+    //verify valid timer enumeration
+    if (timer.which_timer < Timer_1 || timer.which_timer > Timer_5) return ERR_INVALID_ENUM;
+    
     if (period < 1) {
         period = 1;
         ret = ERR_INVALID_PERIOD;
@@ -386,6 +402,10 @@ Error update_frequency_Timer(Timer_Config timer, float frequency) {
 }
 Error update_divider_Timer(Timer_Config timer, Clock_Divider div) {
     Error ret = ERR_NO_ERR;
+    
+    //verify valid timer enumeration
+    if (timer.which_timer < Timer_1 || timer.which_timer > Timer_5) return ERR_INVALID_ENUM;
+    
     switch (timer.which_timer) {
         case Timer_1:
             switch (div) {

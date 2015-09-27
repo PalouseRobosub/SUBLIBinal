@@ -18,8 +18,8 @@ extern "C" {
     /*Enum Defintions*/
     /// \enum UART_Channel The possible UART channels
     typedef enum {
-        UART_CH_1,
-        UART_CH_2
+        UART_CH_1 = 7,
+        UART_CH_2 = 8
     } UART_Channel;
 
     /*Constants*/

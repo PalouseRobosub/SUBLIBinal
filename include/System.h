@@ -56,7 +56,7 @@ extern "C" {
     /// \enum Error Defines the possible communcation errors
     typedef enum {
         ERR_NO_ERR, //not an error
-                
+                ERR_INVALID_ENUM, //invalid enumeration supplied to function
         //Timer Errors
                 ERR_TIMER_FREQ_UNATTAINABLE,
                 ERR_INVALID_DIVIDER,
