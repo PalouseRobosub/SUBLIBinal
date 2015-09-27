@@ -77,9 +77,9 @@ extern "C" {
     Error disable_Timer(Timer_Type which_timer);
 
     
-    Error update_period_Timer(Timer_Config timer, int period);
-    Error update_frequency_Timer(Timer_Config timer, float frequency);
-    Error update_divider_Timer(Timer_Config timer, Clock_Divider div);
+    Error update_period_Timer(Timer_Type which_timer, int period);
+    Error update_frequency_Timer(Timer_Type which_timer, float frequency);
+    Error update_divider_Timer(Timer_Type which_timer, Clock_Divider div);
 
 
 

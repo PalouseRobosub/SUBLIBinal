@@ -256,11 +256,11 @@ Error disable_timer(Timer_Type which_timer)
 }
 
 
-Error update_period_Timer(Timer_Config timer, int period) {
+Error update_period_Timer(Timer_Type which_timer, int period) {
     Error ret = ERR_NO_ERR;
     
     //verify valid timer enumeration
-    if (timer.which_timer < Timer_1 || timer.which_timer > Timer_5) return ERR_INVALID_ENUM;
+    if (which_timer < Timer_1 || which_timer > Timer_5) return ERR_INVALID_ENUM;
     
     if (period < 1) {
         period = 1;
@@ -296,7 +296,7 @@ Error update_period_Timer(Timer_Config timer, int period) {
     
     return ret;
 }
-Error update_frequency_Timer(Timer_Config timer, float frequency) {
+Error update_frequency_Timer(Timer_Type which_timer, float frequency) {
     //determine the best divider based upon desired frequency
     Clock_Divider div;
     Error ret = ERR_NO_ERR;
@@ -340,7 +340,7 @@ Error update_frequency_Timer(Timer_Config timer, float frequency) {
         period = 65535;
         ret = ERR_TIMER_FREQ_UNATTAINABLE;
     }
-    switch (timer.which_timer) {
+    switch (which_timer) {
         case Timer_1://determine the divider for a type A timer
             switch (div) {
                 case Div_1:
@@ -403,13 +403,13 @@ Error update_frequency_Timer(Timer_Config timer, float frequency) {
     
     return ret;
 }
-Error update_divider_Timer(Timer_Config timer, Clock_Divider div) {
+Error update_divider_Timer(Timer_Type which_timer, Clock_Divider div) {
     Error ret = ERR_NO_ERR;
     
     //verify valid timer enumeration
-    if (timer.which_timer < Timer_1 || timer.which_timer > Timer_5) return ERR_INVALID_ENUM;
+    if (which_timer < Timer_1 || which_timer > Timer_5) return ERR_INVALID_ENUM;
     
-    switch (timer.which_timer) {
+    switch (which_timer) {
         case Timer_1:
             switch (div) {
                 case Div_1:
