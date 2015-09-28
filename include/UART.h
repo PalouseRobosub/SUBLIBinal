@@ -44,6 +44,8 @@ extern "C" {
         void (*tx_callback); ///< Callback function for a transmitted byte
         boolean tx_en; ///< Enable the transmit line
         boolean rx_en; ///< Enable the receive line
+        Pin rx_pin; //<May be: UART1: A2, B6, A4, B13, B2    UART2: A1, B5, B1, B11, B8
+        Pin tx_pin; //< May be: UART1: A0, B3, B4, B15, B7    UART2: A3, B14, B0, B10, B9 
     } UART_Config; ///< The configuration struct for the UART channels
 
     /*Function Prototypes*/
