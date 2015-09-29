@@ -271,7 +271,7 @@ Error update_period_Timer(Timer_Type which_timer, int period) {
         ret = ERR_INVALID_PERIOD;
     }
 
-    switch (timer.which_timer) {
+    switch (which_timer) {
         case Timer_1:
             PR1 = period;
             TMR1 = 0;
@@ -296,44 +296,44 @@ Error update_period_Timer(Timer_Type which_timer, int period) {
     
     return ret;
 }
-Error update_frequency_Timer(Timer_Type which_timer, float frequency) {
+Error update_frequency_Timer(Timer_Type which_timer, int pbclk, float frequency) {
     //determine the best divider based upon desired frequency
     Clock_Divider div;
     Error ret = ERR_NO_ERR;
     int period;
     //first,we will determine the best clock divider to use based upon max PR size, this will give us highest accuracy
-    if (frequency  > (float)timer.pbclk/65535) {
+    if (frequency  > (float)pbclk/65535) {
         //we can use Div_1
         div = Div_1;
-        period = timer.pbclk/(frequency*1);
-    } else if (frequency > (float)timer.pbclk/(65535*2)){
+        period = pbclk/(frequency*1);
+    } else if (frequency > (float)pbclk/(65535*2)){
         //div 2 is best
         div = Div_2;
-        period = timer.pbclk/(frequency*2);
-    } else if (frequency > (float)timer.pbclk/(65535*4)) {
+        period = pbclk/(frequency*2);
+    } else if (frequency > (float)pbclk/(65535*4)) {
         //div 4
         div = Div_4;
-        period = timer.pbclk/(frequency*4);
-    } else if(frequency > (float)timer.pbclk/(65535*8)) {
+        period = pbclk/(frequency*4);
+    } else if(frequency > (float)pbclk/(65535*8)) {
         //div 8
         div = Div_8;
-        period = timer.pbclk/(frequency*8);
-    } else if (frequency > (float)timer.pbclk/(65535*16)) {
+        period = pbclk/(frequency*8);
+    } else if (frequency > (float)pbclk/(65535*16)) {
         //div 16
         div = Div_16;
-        period = timer.pbclk/(frequency*16);
-    } else if (frequency > (float)timer.pbclk/(65535*32)) {
+        period = pbclk/(frequency*16);
+    } else if (frequency > (float)pbclk/(65535*32)) {
         //div 32
         div = Div_32;
-        period = timer.pbclk/(frequency*32);
-    } else if (frequency > (float)timer.pbclk/(65535*64)) {
+        period = pbclk/(frequency*32);
+    } else if (frequency > (float)pbclk/(65535*64)) {
         //div 64
         div = Div_64;
-        period = timer.pbclk/(frequency*64);
-    } else if (timer.frequency > (float)timer.pbclk/(65535*256)){
+        period = pbclk/(frequency*64);
+    } else if (frequency > (float)pbclk/(65535*256)){
         //div 256
         div = Div_256;
-        period = timer.pbclk/(timer.frequency*256);
+        period = pbclk/(frequency*256);
     } else {
         //set a warning, as the desire frequency was not achieved. Maximize the period
         div = Div_256;

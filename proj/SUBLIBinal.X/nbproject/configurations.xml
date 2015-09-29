@@ -7,7 +7,6 @@
       <itemPath>../../include/ADC.h</itemPath>
       <itemPath>../../include/ExtInterrupts.h</itemPath>
       <itemPath>../../include/I2C.h</itemPath>
-      <itemPath>../../include/PPS.h</itemPath>
       <itemPath>../../include/Queue.h</itemPath>
       <itemPath>../../include/SPI.h</itemPath>
       <itemPath>../../include/Sensor.h</itemPath>
