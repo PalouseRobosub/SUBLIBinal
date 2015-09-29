@@ -15,6 +15,7 @@
       <itemPath>../../include/UART.h</itemPath>
       <itemPath>../../include/packetizer.h</itemPath>
       <itemPath>../../include/sublibinal.h</itemPath>
+      <itemPath>../../include/PWM.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -33,6 +34,7 @@
       <itemPath>../../src/Timer.c</itemPath>
       <itemPath>../../src/UART.c</itemPath>
       <itemPath>../../src/packetizer.c</itemPath>
+      <itemPath>../../src/PWM.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -54,7 +56,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.40</languageToolchainVersion>
+        <languageToolchainVersion>1.34</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <compileType>
