@@ -83,7 +83,7 @@ UART_Data* initialize_UART(UART_Config config) {
                         U1RXR = 3;
                         break;
                     case Pin_RPB2:
-                        TRISBbits.TRISB2 = 1// input
+                        TRISBbits.TRISB2 = 1;// input
                         ANSELBbits.ANSB2 = 0; //disable analog
                         U1RXR = 4;
                         break;
@@ -176,7 +176,7 @@ UART_Data* initialize_UART(UART_Config config) {
                         U2RXR = 3;
                         break;
                     case Pin_RPB8:
-                        TRISBbits.TRISB8 = 1// input
+                        TRISBbits.TRISB8 = 1;// input
                         U2RXR = 4;
                         break;
                     default:
