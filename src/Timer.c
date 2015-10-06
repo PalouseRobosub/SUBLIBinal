@@ -180,7 +180,7 @@ Error initialize_Timer(Timer_Config config) {
     return ret;
 }
 
-Error enable_timer(Timer_Type which_timer)
+Error enable_Timer(Timer_Type which_timer)
 {
     
     //verify valid timer enumeration
@@ -222,7 +222,7 @@ Error enable_timer(Timer_Type which_timer)
     return ERR_NO_ERR;
 }
 
-Error disable_timer(Timer_Type which_timer)
+Error disable_Timer(Timer_Type which_timer)
 {
     
     //verify valid timer enumeration

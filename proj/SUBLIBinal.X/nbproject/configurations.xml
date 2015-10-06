@@ -16,6 +16,7 @@
       <itemPath>../../include/packetizer.h</itemPath>
       <itemPath>../../include/sublibinal.h</itemPath>
       <itemPath>../../include/PWM.h</itemPath>
+      <itemPath>../../include/sublibinal_config.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
