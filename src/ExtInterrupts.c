@@ -323,7 +323,7 @@ void initialize_Interrupt(Interrupt_Config config)
             INTCONbits.INT4EP = config.polarity;
             IPC4bits.INT4IP = 7;
             IFS0bits.INT4IF = 0;
-            IEC0bits.INT4IE = 0;
+            IEC0bits.INT4IE = config.enable;
             callback_int4 = config.callback;
             break;
         default:
