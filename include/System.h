@@ -12,8 +12,12 @@ extern "C" {
 
 
 /* Includes */
-#define _SUPPRESS_PLIB_WARNING
-#include <peripheral/ports.h>
+#include "attribs.h"
+#include "pic32mx250f128b.h"
+    
+#ifndef NULL
+    #define NULL 0
+#endif
 
 /* Type Defintions*/
     typedef unsigned int uint; ///< An unsigned 32-bit integer
