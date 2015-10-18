@@ -49,9 +49,9 @@ extern "C" {
     #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
     #pragma config CP = OFF                 // Code Protect (Protection Disabled)
 
-#ifndef PB_CLK
-    #define PB_CLK 15000000
-#endif
+    #ifndef PB_CLK
+        #define PB_CLK 15000000
+    #endif
     
     
 #ifdef	__cplusplus
