@@ -21,4 +21,16 @@
  */
 
 
+void disable_Interrupts()
+{
+    asm volatile ("di");
+}
+
+void enable_Interrupts()
+{
+    INTCON |= 1<<12;
+    asm volatile ("nop"); //this nop is crucial. It resolves a race condition between a configuration of the CPU register INTCON
+                          //and an IRQ. The NOP allows the CPU to configure for multi vector mode before it allows IRQs to enter.
+    asm volatile("ei");
+}
 

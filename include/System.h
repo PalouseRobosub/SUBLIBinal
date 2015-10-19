@@ -60,11 +60,11 @@ extern "C" {
     /// \enum Error Defines the possible communcation errors
     typedef enum {
         ERR_NO_ERR, //not an error
-                ERR_INVALID_ENUM, //invalid enumeration supplied to function
+        ERR_INVALID_ENUM, //invalid enumeration supplied to function
         //Timer Errors
-                ERR_TIMER_FREQ_UNATTAINABLE,
-                ERR_INVALID_DIVIDER,
-                ERR_INVALID_PERIOD,
+        ERR_TIMER_FREQ_UNATTAINABLE,
+        ERR_INVALID_DIVIDER,
+        ERR_INVALID_PERIOD,
                 
                 
         ERR_INVALID_SEND,
@@ -72,6 +72,9 @@ extern "C" {
         ERR_QUEUE_INVALID_READ,
         ERR_INVALID_CHANNEL //invalid channel
     }Error;
+    
+    void disable_Interrupts();
+    void enable_Interrupts();
 
 #ifdef	__cplusplus
 }
