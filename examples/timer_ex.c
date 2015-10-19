@@ -50,7 +50,7 @@ int main(void) {
 void timer_callback(void)
 {
     //toggle a pin
-    PORTBINV = 1<<3;
+    LATBINV = 1<<3;
 
     
 }
