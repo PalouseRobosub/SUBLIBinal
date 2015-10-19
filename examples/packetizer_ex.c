@@ -13,55 +13,7 @@
  System Includes
  ************************************************************************/
 #include "sublibinal.h"
-
-/*************************************************************************
- System Includes
- ************************************************************************/
-#define PB_CLK 15000000 //15 MHz
-
-/*************************************************************************
- Processor Configuration
- ************************************************************************/
-//insert configuration for new microcontrollers
-#include <xc.h>
-
-//select programming pins
-#pragma config ICESEL = ICS_PGx1// ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
-
-// DEVCFG3
-// USERID = No Setting
-#pragma config PMDL1WAY = OFF            // Peripheral Module Disable Configuration (Allow only one reconfiguration)
-#pragma config IOL1WAY = OFF             // Peripheral Pin Select Configuration (Allow only one reconfiguration)
-#pragma config FUSBIDIO = OFF            // USB USID Selection (Controlled by the USB Module)
-#pragma config FVBUSONIO = OFF           // USB VBUS ON Selection (Controlled by USB Module)
-
-// DEVCFG2
-#pragma config FPLLIDIV = DIV_2         // PLL Input Divider (2x Divider)
-#pragma config FPLLMUL = MUL_15         // PLL Multiplier (15x Multiplier)
-#pragma config UPLLIDIV = DIV_12        // USB PLL Input Divider (12x Divider)
-#pragma config UPLLEN = OFF             // USB PLL Enable (Disabled and Bypassed)
-#pragma config FPLLODIV = DIV_2         // System PLL Output Clock Divider (PLL Divide by 1)
-
-// DEVCFG1
-#pragma config FNOSC = FRCPLL           // Oscillator Selection Bits (Fast RC Osc with PLL)
-#pragma config FSOSCEN = OFF            // Secondary Oscillator Enable (Disabled)
-#pragma config IESO = OFF               // Internal/External Switch Over (Disabled)
-#pragma config POSCMOD = OFF            // Primary Oscillator Configuration (Primary osc disabled)
-#pragma config OSCIOFNC = OFF            // CLKO Output Signal Active on the OSCO Pin (Enabled)
-#pragma config FPBDIV = DIV_2           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/2)
-#pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Clock Switch Disable, FSCM Disabled)
-#pragma config WDTPS = PS1048576        // Watchdog Timer Postscaler (1:1048576)
-#pragma config WINDIS = OFF             // Watchdog Timer Window Enable (Watchdog Timer is in Non-Window Mode)
-#pragma config FWDTEN = OFF             // Watchdog Timer Enable (WDT Disabled (SWDTEN Bit Controls))
-#pragma config FWDTWINSZ = WINSZ_25     // Watchdog Timer Window Size (Window Size is 25%)
-
-// DEVCFG0
-#pragma config JTAGEN = OFF              // JTAG Enable (JTAG Port Enabled)
-//programming pins are selected above
-#pragma config PWP = OFF                // Program Flash Write Protect (Disable)
-#pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
-#pragma config CP = OFF                 // Code Protect (Protection Disabled)
-
+#include "sublibinal_config.h"
 
 //forward declarations
 void timer_callback(void);
@@ -88,12 +40,6 @@ int main(void) {
     //temp buffer
     uint8 blah;
     
-    //peripheral pin select for UART
-    ANSELA = ANSELB = 0;
-    RPB15R = 1; //RPB15 is U1TX
-    TRISBbits.TRISB13 = 1;
-    U1RXR = 0b11; //RPB13 is U1RX
-
     //setup timer peripheral
     timer_config.frequency = 1000; //We will set our timer to fire at 1 KHz
     timer_config.pbclk = PB_CLK; //Specify peripheral bus clock speed
@@ -109,11 +55,13 @@ int main(void) {
     uart_config.speed = 115200; //provide a baud rate that you wish the microcontroller to transmit and receive at
     uart_config.rx_buffer_ptr = uart_rx_buffer; //hand the uart a buffer of data to use for a queue
     uart_config.rx_buffer_size = sizeof(uart_rx_buffer); //tell the program the size of our data buffer
-    uart_config.rx_en = 1; //enable the receive buffer
+    uart_config.rx_pin = Pin_RPB13; //set the UART rx pin to be RPB13
+	uart_config.rx_en = 1; //enable the receive buffer
     uart_config.tx_buffer_ptr = uart_tx_buffer; //hand the uart configuration a buffer for transmission data
     uart_config.tx_buffer_size = sizeof(uart_tx_buffer); //tell the program the size of the buffer
-    uart_config.tx_en = 1; //enable transmission on the UART
-    initialize_UART(uart_config);//initialize all of our UART parameters and begin functionality of the UART as per our specifications
+    uart_config.rx_pin = Pin_RPB15; //set the UART tx pin to be RPB15
+	uart_config.tx_en = 1; //enable transmission on the UART
+	initialize_UART(uart_config);//initialize all of our UART parameters and begin functionality of the UART as per our specifications
     
     
     //Configure the packetizer
@@ -124,8 +72,7 @@ int main(void) {
     initialize_packetizer(packetizer_config); //initialize the packetizer
     
     //Global interrupt enable. Do this last!
-    INTEnableSystemMultiVectoredInt();
-    asm volatile ("ei"); //reenable interrupts
+	enable_Interrupts();
 
     while (1) {
         bg_process_packetizer(PACKET_UART_CH_1);
