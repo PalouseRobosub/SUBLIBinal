@@ -13,7 +13,6 @@
  ************************************************************************/
 #include "sublibinal.h"
 #include "sublibinal_config.h"
-#include "peripheral/ports.h"
 
 //forward declarations
 void timer_callback(void);
