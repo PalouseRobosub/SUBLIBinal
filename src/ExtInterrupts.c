@@ -361,18 +361,23 @@ void enable_Interrupt(Interrupt extInt) {
     switch (extInt) {
         case INT0:
             IEC0bits.INT0IE = 1;
+            IFS0bits.INT0IF = 0;
             break;
         case INT1:
             IEC0bits.INT1IE = 1;
+            IFS0bits.INT1IF = 0;
             break;
         case INT2:
             IEC0bits.INT2IE = 1;
+            IFS0bits.INT2IF = 0;
             break;
         case INT3:
             IEC0bits.INT3IE = 1;
+            IFS0bits.INT3IF = 0;
             break;
         case INT4:
             IEC0bits.INT4IE = 1;
+            IFS0bits.INT4IF = 0;
             break;
         default:
             //error
