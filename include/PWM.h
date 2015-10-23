@@ -35,8 +35,8 @@ extern "C" {
     
     //functions
     void initialize_PWM(PWM_Config config);
-    void enable_PWM(PWM_Config config);
-    void disable_PWM(PWM_Config config);
+    void enable_PWM(PWM_Channel channel);
+    void disable_PWM(PWM_Channel channel);
     
     void update_PWM(PWM_Config config, float dutyCycle);
     

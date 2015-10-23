@@ -231,8 +231,8 @@
         }
     }
     
-    void enable_PWM(PWM_Config config) {
-        switch (config.channel) {
+    void enable_PWM(PWM_Channel channel) {
+        switch (channel) {
             case PWM_CH_1:
                 OC1CONbits.ON = 1;
                 break;
@@ -251,8 +251,8 @@
         }
     }
     
-    void disable_PWM(PWM_Config config) {
-        switch (config.channel) {
+    void disable_PWM(PWM_Channel channel) {
+        switch (channel) {
             case PWM_CH_1:
                 OC1CONbits.ON = 0;
                 IEC0bits.OC1IE = 0;
