@@ -17,6 +17,7 @@
       <itemPath>../../include/sublibinal.h</itemPath>
       <itemPath>../../include/PWM.h</itemPath>
       <itemPath>../../include/sublibinal_config.h</itemPath>
+      <itemPath>../../include/Comparator.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -36,6 +37,7 @@
       <itemPath>../../src/UART.c</itemPath>
       <itemPath>../../src/packetizer.c</itemPath>
       <itemPath>../../src/PWM.c</itemPath>
+      <itemPath>../../src/Comparator.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -57,7 +59,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.34</languageToolchainVersion>
+        <languageToolchainVersion>1.40</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <compileType>

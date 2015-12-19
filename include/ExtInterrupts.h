@@ -19,13 +19,7 @@ extern "C" {
         INT2,
         INT3,
         INT4
-    }Interrupt;
-
-    
-    typedef enum {
-        falling,
-        rising
-    } Polarity;
+    }Interrupt; 
     
     typedef enum {
         none,

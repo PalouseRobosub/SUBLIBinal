@@ -57,6 +57,12 @@ extern "C" {
         Pin_RPB15
     }Pin;
 
+    typedef enum {
+        falling,
+        rising,
+		rising_or_falling
+    } Polarity;
+
     /// \enum Error Defines the possible communcation errors
     typedef enum {
         ERR_NO_ERR, //not an error
@@ -66,6 +72,9 @@ extern "C" {
         ERR_INVALID_DIVIDER,
         ERR_INVALID_PERIOD,
                 
+        //Comparator errors
+        ERR_INVALID_PIN,
+        ERR_INVALID_VREF,
                 
         ERR_INVALID_SEND,
         ERR_QUEUE_FULL, //queue is full
