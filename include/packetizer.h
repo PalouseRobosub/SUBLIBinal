@@ -57,6 +57,10 @@ extern "C" {
      * \param which_channel The channel to watch in the process
      */
     void bg_process_packetizer(Data_Channel which_channel);
+
+	//Acquires initial synchronization with computer
+	void acquireSync(Packetizer_Channel channel, uint pbclk)
+
 #ifdef	__cplusplus
 }
 #endif

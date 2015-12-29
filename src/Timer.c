@@ -448,7 +448,16 @@ Error update_divider_Timer(Timer_Type which_timer, Clock_Divider div) {
     
     return ret;
 }
-    
+
+void *getSyncCallback()
+{
+	return timer_1_callback;
+}
+
+void setSyncCallback(void *callback)
+{
+	timer_1_callback = callback;
+}
 
 void __ISR(_TIMER_1_VECTOR, IPL7AUTO) Timer_Handler_1(void) {
     asm volatile ("di"); //disable interrupt
