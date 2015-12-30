@@ -59,7 +59,7 @@ extern "C" {
     void bg_process_packetizer(Data_Channel which_channel);
 
 	//Acquires initial synchronization with computer
-	void acquireSync(Packetizer_Channel channel, uint pbclk)
+	void acquireSync(Data_Channel channel, uint pbclk);
 
 #ifdef	__cplusplus
 }

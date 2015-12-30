@@ -1,5 +1,6 @@
 #include "packetizer.h"
 #include "UART.h"
+#include "Timer.h"
 
 
 //Copyright 2015 Palouse RoboSub Club
@@ -127,7 +128,13 @@ void bg_process_packetizer(Data_Channel which_channel) {
                     break;
                 case 1: //second byte, length byte
                     *packet_length = current_byte;
-                    ++(*received_index);
+                    if (*packet_length == 0)
+                    {
+                        *packet_received = TRUE;
+                        *received_index = 0;
+                    }
+                    else
+                        ++(*received_index);
                     break;
 
                 default: //any other bytes are data bytes
@@ -184,14 +191,16 @@ void bg_process_packetizer(Data_Channel which_channel) {
 /////////////////////////////////
 
 volatile char sync = 0;
-Packetizer_Channel pchannel;
+volatile char null_received = 0;
+uint pb_clk = 0;
+Data_Channel pchannel = 0;
 
 void syncCallback()
 {
 	if (null_received) 
 	{
 		null_received = 0;
-		update_frequency_Timer(Timer_1, 50);
+		update_frequency_Timer(Timer_1, pb_clk, 50);
 	}
 	send_packet(pchannel, NULL, 0);
 }
@@ -200,22 +209,23 @@ void packetizerCallback(uint8 *data, uint8 size)
 {
 	char tmp = 1;
 	//check to see if we received the NULL packet
-	if (size == 0)
+	if (size == 0 && !null_received)
 	{
 		//NULL packet received
 		TMR1 = 0;
-		update_frequency_Timer(Timer_1, 1);
 		null_received = 1;
 		send_packet(pchannel, &tmp, 1);
 	}
-	else if (size == 1 && null_received == 1)
-		if (data[0] == 1)
-			sync = 1; //Sync acquired!
+    else if (size == 1 && null_received)    
+    {
+        if (data[0] == 1)
+            sync = 1;
+    }
 }
 
-void acquireSync(Packetizer_Channel channel, uint pbclk)
+void acquireSync(Data_Channel channel, uint pbclk)
 {
-
+    pb_clk = pbclk;
 	//This function will temporarily commandeer a timer for its use
 	//backup Timer_1 configurations
 	int tmpT1CON = T1CON, tmpPR1 = PR1;
@@ -230,8 +240,9 @@ void acquireSync(Packetizer_Channel channel, uint pbclk)
 	//Configure Timer_1
 	Timer_Config t1 = {0};
 	t1.callback = &syncCallback;
+    t1.which_timer = Timer_1;
 	t1.enabled = TRUE;
-	t1.frequency = 50;
+	t1.frequency = 5;
 	t1.pbclk = pbclk;
 	initialize_Timer(t1);
 
@@ -241,14 +252,14 @@ void acquireSync(Packetizer_Channel channel, uint pbclk)
 		tmpPacketizerCallback = UART1_channel.receive_callback;
 		UART1_channel.receive_callback = &packetizerCallback;
 		IEC1bits.U1TXIE = 1;
-		ICE1bits.U1RXIE = 1;
+		IEC1bits.U1RXIE = 1;
 	}
 	else
 	{
 		tmpPacketizerCallback = UART2_channel.receive_callback;
 		UART2_channel.receive_callback = &packetizerCallback;
-		IEC2bits.U1TXIE = 1;
-		ICE2bits.U1RXIE = 1;
+		IEC1bits.U2TXIE = 1;
+		IEC1bits.U2RXIE = 1;
 	}
 
 	pchannel = channel;
