@@ -35,7 +35,7 @@ int main(void) {
     pwm_configuration.dutyCycle = .75; //Set the duty cycle to 75%
     pwm_configuration.enable = TRUE; //enable the PWM
     pwm_configuration.pin = Pin_RPB3; //Set our PWM to output on RB3
-    pwm_configuration.timer = timer_configuration; //Assign the timer to the PWM configuration
+    pwm_configuration.timer = Timer_2; //Assign the timer to the PWM configuration
     
     initialize_PWM(pwm_configuration); //initialize the PWM module
     

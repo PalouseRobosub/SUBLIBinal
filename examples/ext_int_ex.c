@@ -30,7 +30,7 @@ int main(void) {
     
     interrupt_Config.callback = &interrupt_Callback; //set the callback function that executes when the interrupt triggers
     interrupt_Config.enable = TRUE; //We will enable the external interrupt
-    interrupt_Config.extInt = INT1; //We will use External Interrupt 1
+    interrupt_Config.extInt = Interrupt_1; //We will use External Interrupt 1
     interrupt_Config.pin = Pin_RPB14; //Set our external interrupt pin to be RB14
     interrupt_Config.resistor = pullup; //set an internal pullup resistor
     interrupt_Config.polarity = rising; //set the interrupt to trigger when the input toggles from low to high, 
@@ -49,5 +49,5 @@ int main(void) {
 }
 
 void interrupt_Callback() {
-    PORTAINV = 1; //toggle bit 1 in PORTA
+	LATAINV |= 1; //Toggle Pin A0
 }

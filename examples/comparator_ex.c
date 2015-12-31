@@ -19,7 +19,7 @@ int main()
 	initialize_Comparator(comparatorConfig);			//Initialize the comparator
 
 	TRISB &= ~(1<<13); 									//Enable output on RPB13
-	PORTB &= ~(1<<13);									//Initialize output to 0
+	LATB &= ~(1<<13);									//Initialize output to 0
 
 	enable_Interrupts();								//Global interrupt enable
 
@@ -28,5 +28,5 @@ int main()
 
 void comparator_callback()
 {
-	PORTBINV |= 1<<13;									//Toggle the status of Pin RPB13
+	LATBINV |= 1<<13;									//Toggle the status of Pin RPB13
 }
