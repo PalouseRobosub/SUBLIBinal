@@ -37,6 +37,7 @@ extern "C" {
 #include "UART.h"
 #include "packetizer.h"
 #include "PWM.h"
+#include "Comparator.h"
 
 #ifdef	__cplusplus
 }

@@ -6,11 +6,10 @@ void (*callback_comp3) (void);
 
 Error initialize_Comparator(Comparator_Config config) {
 	//This will initialize the comparator
-	int stat = 0;
+	Error stat = ERR_NO_ERR;
     
 	//First, figure out the voltage reference
-    if (updateVReference_Comparator(config.voltage_reference) == ERR_NO_ERR)
-        stat = 1;
+    stat = updateVReference_Comparator(config.voltage_reference);
 
 	//Now, configure the comparator itself
 	switch (config.channel) {
@@ -29,7 +28,10 @@ Error initialize_Comparator(Comparator_Config config) {
 			}
 			
 			//Configure the negative reference selection
-			CM1CONbits.CREF = stat;
+            if (stat == 0)
+                CM1CONbits.CREF = 1;
+            else
+                CM1CONbits.CREF = 0; //If 0, External reference is used
 
 			//Configure the Positive input selection
 			switch (config.input) {
@@ -62,7 +64,7 @@ Error initialize_Comparator(Comparator_Config config) {
             IEC1bits.CMP1IE = config.enable; //enable interrupt
             
             //configure the negative input terminal
-            if (stat == 0)
+            if (stat != 0)
             {
                 TRISBbits.TRISB3 = 1;
                 ANSELBbits.ANSB3 = 1;
@@ -85,7 +87,10 @@ Error initialize_Comparator(Comparator_Config config) {
 			}
 			
 			//Configure the negative reference selection
-			CM2CONbits.CREF = stat;
+            if (stat == 0)
+                CM2CONbits.CREF = 1;
+            else
+                CM2CONbits.CREF = 0; //If 0, External reference is used
 
 			//Configure the Positive input selection
 			switch (config.input) {
@@ -118,7 +123,7 @@ Error initialize_Comparator(Comparator_Config config) {
             IEC1bits.CMP2IE = config.enable; //enable interrupt
             
             //configure the negative input terminal
-            if (stat == 0)
+            if (stat != 0)
             {
                 TRISBbits.TRISB1 = 1;
                 ANSELBbits.ANSB1 = 1;
@@ -141,7 +146,10 @@ Error initialize_Comparator(Comparator_Config config) {
 			}
 			
 			//Configure the negative reference selection
-			CM3CONbits.CREF = stat;
+            if (stat == 0)
+                CM3CONbits.CREF = 1;
+            else
+                CM3CONbits.CREF = 0; //If 0, External reference is used
 
 			//Configure the Positive input selection
 			switch (config.input) {
@@ -174,7 +182,7 @@ Error initialize_Comparator(Comparator_Config config) {
             IEC1bits.CMP3IE = config.enable; //enable interrupt
             
             //configure the negative input terminal
-            if (stat == 0)
+            if (stat != 0)
             {
                 TRISBbits.TRISB15 = 1;
                 ANSELBbits.ANSB15 = 1;
@@ -184,7 +192,7 @@ Error initialize_Comparator(Comparator_Config config) {
 			break;
 	}
     
-    return ERR_NO_ERR;
+    return stat;
 
     
 }
@@ -225,22 +233,25 @@ void disable_Comparator(Comparator_Channel channel) {
 }
 
 Error updateVReference_Comparator(float voltage_reference) {
-    float val_32step = .25, val_24step = 0;
+    float val_32step = .825, val_24step = 0; //.825 = 25% of 3.3
 	int config_32step = 0, config_24step = 0;
 	float error_32, error_24;
     Error ret = ERR_INVALID_VREF;
-
-	if ((voltage_reference > .75*3.3) || (voltage_reference < 0)) {
+    
+    //2.475 == 3.3 * 75%
+	if (!(voltage_reference > 2.475) || (voltage_reference < 0)) {
 		//Calculate the values if using .25 - .75 reference
-		while ((voltage_reference - val_32step) > (3.3/64)) { //While the difference is greater than half a step size
+        
+        //We could do this with a look up table of some sort as well, to save on processing
+		while ((voltage_reference - val_32step) > (0.0515625)) { //While the difference is greater than half a step size (3.3/64))
 			//add a step to val
-			val_32step += 3.3/32;
+			val_32step += 0.103125; //(3.3/32), 1 step size
 			config_32step++;
 		}
 	
 		//Now, calculate the value if using 0 - .67 reference
-		while ((voltage_reference - val_24step) > (3.3/48)) { //While the difference is greater than a half step
-			val_24step += 3.3/24;
+		while ((voltage_reference - val_24step) > (0.06875)) { //While the difference is greater than a half step (3.3/48))
+			val_24step += 0.1375; //3.3/24 = 1 step size
 			config_24step++;
 		}
 	
@@ -269,4 +280,44 @@ Error updateVReference_Comparator(float voltage_reference) {
 	}
     
     return ret;
+}
+
+//ISRs
+void __ISR(_COMPARATOR_1_VECTOR, IPL7AUTO) Comparator_Handler_1(void) {
+
+    asm volatile ("di"); //Disable interrupts
+    
+    if (callback_comp1 != NULL)
+    {
+        callback_comp1();
+    }
+    
+	IFS1bits.CMP1IF = 0;
+    asm volatile ("ei");
+}
+
+void __ISR(_COMPARATOR_2_VECTOR, IPL7AUTO) Comparator_Handler_2(void) {
+
+    asm volatile ("di"); //Disable interrupts
+    
+    if (callback_comp2 != NULL)
+    {
+        callback_comp2();
+    }
+    
+	IFS1bits.CMP2IF = 0;
+    asm volatile ("ei");
+}
+
+void __ISR(_COMPARATOR_3_VECTOR, IPL7AUTO) Comparator_Handler_3(void) {
+	
+    asm volatile ("di"); //Disable interrupts
+    
+    if (callback_comp3 != NULL)
+    {
+        callback_comp3();
+    }
+    
+	IFS1bits.CMP3IF = 0;
+    asm volatile ("ei");
 }
