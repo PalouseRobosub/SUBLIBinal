@@ -31,7 +31,7 @@ extern "C" {
         Interrupt extInt;
         Pin pin;
         Polarity polarity;
-        int enable;
+        boolean enable;
         Resistor resistor;
         void *callback;
     } Interrupt_Config;
