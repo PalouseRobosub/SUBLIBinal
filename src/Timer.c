@@ -296,7 +296,7 @@ Error update_period_Timer(Timer_Type which_timer, int period) {
     
     return ret;
 }
-Error update_frequency_Timer(Timer_Type which_timer, int pbclk, float frequency) {
+Error update_frequency_Timer(Timer_Type which_timer, uint pbclk, float frequency) {
     //determine the best divider based upon desired frequency
     Clock_Divider div;
     Error ret = ERR_NO_ERR;

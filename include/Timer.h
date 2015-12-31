@@ -78,7 +78,7 @@ extern "C" {
 
     
     Error update_period_Timer(Timer_Type which_timer, int period);
-    Error update_frequency_Timer(Timer_Type which_timer, int pbclk, float frequency);
+    Error update_frequency_Timer(Timer_Type which_timer, uint pbclk, float frequency);
     Error update_divider_Timer(Timer_Type which_timer, Clock_Divider div);
 
 
