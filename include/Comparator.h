@@ -15,9 +15,9 @@ extern "C" {
 
 	/* Enums */
 	typedef enum {
-		COMP_CH_1,
-		COMP_CH_2,
-		COMP_CH_3
+		COMP_CH_1, //< Comparator 1
+		COMP_CH_2, //< Comparator 2
+		COMP_CH_3 //< Comparator 3
 	} Comparator_Channel;
 
 	/* Object Defitions */
@@ -26,7 +26,7 @@ extern "C" {
 		Polarity edge; ///< The type of edge that triggers an interrupt
 		void *callback; ///< Callback function for interrupt
 		boolean enable; ///< Enable the comparator module
-		float voltage_reference; ///< The voltage reference to be used. If this is < 0 or > Vdd, will use external pin
+		float voltage_reference; ///< The voltage reference to be used. If this is < 0 or > .75*Vdd, will use external pin
         Comparator_Channel channel; ///< The channel of the comparator to initialize
 	} Comparator_Config;
 
