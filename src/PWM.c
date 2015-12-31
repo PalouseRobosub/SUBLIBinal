@@ -294,50 +294,50 @@
         }
     }
     
-    Error update_PWM(PWM_Config config, float dutyCycle) {
+    Error update_PWM(PWM_Channel channel, Timer_Type timer, float dutyCycle) {
         Error ret = ERR_NO_ERR;
         //update the duty cycle of the respective PWM
-        switch (config.channel) {
+        switch (channel) {
             case PWM_CH_1:
-                if (config.timer == Timer_2) {
+                if (timer == Timer_2) {
                     OC1RS = PR2*dutyCycle;
-                } else if (config.timer == Timer_3) {
+                } else if (timer == Timer_3) {
                     OC1RS = PR3*dutyCycle;
                 } else {
                     ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_2:
-                if (config.timer == Timer_2) {
+                if (timer == Timer_2) {
                     OC2RS = PR2*dutyCycle;
-                } else if (config.timer == Timer_3) {
+                } else if (timer == Timer_3) {
                     OC2RS = PR3*dutyCycle;
                 } else {
                     ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_3:
-                if (config.timer == Timer_2) {
+                if (timer == Timer_2) {
                     OC3RS = PR2*dutyCycle;
-                } else if (config.timer == Timer_3) {
+                } else if (timer == Timer_3) {
                     OC3RS = PR3*dutyCycle;
                 } else {
                     ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_4:
-                if (config.timer == Timer_2) {
+                if (timer == Timer_2) {
                     OC4RS = PR2*dutyCycle;
-                } else if (config.timer == Timer_3) {
+                } else if (timer == Timer_3) {
                     OC4RS = PR3*dutyCycle;
                 } else {
                     ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_5:
-                if (config.timer == Timer_2) {
+                if (timer == Timer_2) {
                     OC5RS = PR2*dutyCycle;
-                } else if (config.timer == Timer_3) {
+                } else if (timer == Timer_3) {
                     OC5RS = PR3*dutyCycle;
                 } else {
                     ret = ERR_INVALID_ENUM;

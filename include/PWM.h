@@ -37,8 +37,7 @@ extern "C" {
     Error initialize_PWM(PWM_Config config);
     void enable_PWM(PWM_Channel channel);
     void disable_PWM(PWM_Channel channel);
-    
-    Error update_PWM(PWM_Config config, float dutyCycle);
+    Error update_PWM(PWM_Channel channel, Timer_Type timer, float dutyCycle);
     
     
     
