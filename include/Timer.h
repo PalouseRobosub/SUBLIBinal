@@ -36,7 +36,7 @@ extern "C" {
 
     typedef struct TIMER_CONFIG {
         Timer_Type which_timer; ///< The timer to configure
-        uint frequency;
+        float frequency;
         uint pbclk;
         void (*callback); ///< The function to call when the timer is triggered
         boolean enabled; ///< Tells if the timer is enabled
