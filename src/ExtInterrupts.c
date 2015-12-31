@@ -35,7 +35,7 @@ void initialize_Interrupt(Interrupt_Config config)
     switch (config.extInt) {
     //set the tristate and the PPS
     //disable analog on this pin
-        case INT0:
+        case Interrupt_0:
             switch (config.resistor) {
                 case pullup:
                     CNPUBbits.CNPUB7 = 1;
@@ -51,7 +51,7 @@ void initialize_Interrupt(Interrupt_Config config)
             IEC0bits.INT0IE = config.enable; //enable the interrupt?
             callback_int0 = config.callback;//set the callback
             break;
-        case INT1:
+        case Interrupt_1:
             switch (config.pin) {
                 case Pin_RPB14:
                     INT1R = 1;
@@ -123,7 +123,7 @@ void initialize_Interrupt(Interrupt_Config config)
             IEC0bits.INT1IE = config.enable;//enable-disable
             callback_int1 = config.callback;//set callback
             break;
-        case INT2:
+        case Interrupt_2:
             switch (config.pin) {
                 //Pin RPB6 is not available on the PIC32MX250F128B
                 case Pin_RPA4:
@@ -183,7 +183,7 @@ void initialize_Interrupt(Interrupt_Config config)
             IEC0bits.INT2IE = config.enable;//enable disable
             callback_int2 = config.callback;//clalback
             break;
-        case INT3:
+        case Interrupt_3:
             switch (config.pin) {
                 case Pin_RPB5:
                     INT3R = 1;
@@ -254,7 +254,7 @@ void initialize_Interrupt(Interrupt_Config config)
             IEC0bits.INT3IE = config.enable;
             callback_int3 = config.callback;
             break;
-        case INT4:
+        case Interrupt_4:
             switch (config.pin) {
                 case Pin_RPB3:
                     INT4R = 1;
@@ -336,19 +336,19 @@ void initialize_Interrupt(Interrupt_Config config)
 void disable_Interrupt(Interrupt extInt) {
     //clear the bit
     switch (extInt) {
-        case INT0:
+        case Interrupt_0:
             IEC0bits.INT0IE = 0;
             break;
-        case INT1:
+        case Interrupt_1:
             IEC0bits.INT1IE = 0;
             break;
-        case INT2:
+        case Interrupt_2:
             IEC0bits.INT2IE = 0;
             break;
-        case INT3:
+        case Interrupt_3:
             IEC0bits.INT3IE = 0;
             break;
-        case INT4:
+        case Interrupt_4:
             IEC0bits.INT4IE = 0;
             break;
         default:
@@ -359,23 +359,23 @@ void disable_Interrupt(Interrupt extInt) {
 void enable_Interrupt(Interrupt extInt) {
     //set the bit
     switch (extInt) {
-        case INT0:
+        case Interrupt_0:
             IEC0bits.INT0IE = 1;
             IFS0bits.INT0IF = 0;
             break;
-        case INT1:
+        case Interrupt_1:
             IEC0bits.INT1IE = 1;
             IFS0bits.INT1IF = 0;
             break;
-        case INT2:
+        case Interrupt_2:
             IEC0bits.INT2IE = 1;
             IFS0bits.INT2IF = 0;
             break;
-        case INT3:
+        case Interrupt_3:
             IEC0bits.INT3IE = 1;
             IFS0bits.INT3IF = 0;
             break;
-        case INT4:
+        case Interrupt_4:
             IEC0bits.INT4IE = 1;
             IFS0bits.INT4IF = 0;
             break;

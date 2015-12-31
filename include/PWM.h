@@ -28,7 +28,7 @@ extern "C" {
         float dutyCycle; // Only used in PWM mode
         Timer_Config timer;
         Pin pin; //our output pin
-        uint8 enable;
+        boolean enable;
         PWM_Channel channel;
     }PWM_Config;
 

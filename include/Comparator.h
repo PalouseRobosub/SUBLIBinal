@@ -25,7 +25,7 @@ extern "C" {
 		Pin input; ///< External Input to the comparator
 		Polarity edge; ///< The type of edge that triggers an interrupt
 		void *callback; ///< Callback function for interrupt
-		uint8 enable; ///< Enable the comparator module
+		boolean enable; ///< Enable the comparator module
 		float voltage_reference; ///< The voltage reference to be used. If this is < 0 or > Vdd, will use external pin
         Comparator_Channel channel; ///< The channel of the comparator to initialize
 	} Comparator_Config;

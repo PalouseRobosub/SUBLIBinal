@@ -14,11 +14,11 @@ extern "C" {
     #include "System.h"
 
     typedef enum {
-        INT0,
-        INT1,
-        INT2,
-        INT3,
-        INT4
+        Interrupt_0,
+        Interrupt_1,
+        Interrupt_2,
+        Interrupt_3,
+        Interrupt_4
     }Interrupt; 
     
     typedef enum {
