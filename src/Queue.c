@@ -44,7 +44,7 @@ Error enqueue(Queue* queue, uint8* data, uint data_size) {
     //check to see if there is room in the queue for the data
     if ((queue->buffer_size - queue->numStored) < data_size) {
         __builtin_set_isr_state(interrupt_state);
-        return ERR_INVALID_SEND;
+        return ERR_QUEUE_FULL;
     }
 
     //copy the memory
@@ -62,7 +62,7 @@ Error enqueue(Queue* queue, uint8* data, uint data_size) {
     queue->numStored += data_size;
 
     __builtin_set_isr_state(interrupt_state);
-    return 0;
+    return ERR_NO_ERR;
 }
 
 Error dequeue(Queue* queue, uint8* output_data, uint data_size) {
@@ -92,5 +92,5 @@ Error dequeue(Queue* queue, uint8* output_data, uint data_size) {
     queue->numStored -= data_size;
 
     __builtin_set_isr_state(interrupt_state);
-    return 0;
+    return ERR_NO_ERR;
 }

@@ -117,7 +117,7 @@ Error initialize_Comparator(Comparator_Config config) {
 			}
 
 			//Configure the interrupts
-            callback_comp1 = config.callback;
+            callback_comp2 = config.callback;
             IFS1bits.CMP2IF = 0; //clear the flag
             IPC7bits.CMP2IP = 7; //Set priority
             IEC1bits.CMP2IE = config.enable; //enable interrupt
@@ -176,7 +176,7 @@ Error initialize_Comparator(Comparator_Config config) {
 			}
 
 			//Configure the interrupts
-            callback_comp1 = config.callback;
+            callback_comp3 = config.callback;
             IFS1bits.CMP3IF = 0; //clear the flag
             IPC7bits.CMP3IP = 7; //Set priority
             IEC1bits.CMP3IE = config.enable; //enable interrupt

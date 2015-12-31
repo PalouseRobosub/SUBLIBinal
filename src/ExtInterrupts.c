@@ -28,8 +28,12 @@ void (*callback_int3) (void);
 void (*callback_int4) (void);
 
 
-void initialize_Interrupt(Interrupt_Config config) 
+Error initialize_Interrupt(Interrupt_Config config) 
 {
+    Error ret = ERR_NO_ERR;
+    
+    if ((config.polarity != rising) && (config.polarity != falling))
+        return ERR_INVALID_POLARITY;
     
     //for initialization, we must first set the directionality of the pin and disable any analog values on the pin
     switch (config.extInt) {
@@ -103,7 +107,7 @@ void initialize_Interrupt(Interrupt_Config config)
                             break;
                     }
                     break;
-                default: //RPA3 will also default to here
+                case Pin_RPA3: //RPA3 will also default to here
                     TRISAbits.TRISA3 = 1;
                     INT1R = 0;
                     switch (config.resistor) {
@@ -114,6 +118,9 @@ void initialize_Interrupt(Interrupt_Config config)
                             CNPDAbits.CNPDA3 = 1;
                             break;
                     }
+                    break;
+                default:
+                    ret = ERR_INVALID_PIN;
                     break;
             }
             
@@ -164,7 +171,7 @@ void initialize_Interrupt(Interrupt_Config config)
                             break;
                     }
                     break;
-                default: // RPA2 will be used
+                case Pin_RPA2: // RPA2 will be used
                     INT2R = 0;
                     TRISAbits.TRISA2 = 1;
                     switch (config.resistor) {
@@ -175,6 +182,9 @@ void initialize_Interrupt(Interrupt_Config config)
                             CNPDAbits.CNPDA2 = 1;
                             break;
                     }
+                    break;
+                default:
+                    ret = ERR_INVALID_PIN;
                     break;
             }
             INTCONbits.INT2EP = config.polarity;
@@ -234,7 +244,7 @@ void initialize_Interrupt(Interrupt_Config config)
                             break;
                     }
                     break;
-                default: //RPA1
+                case Pin_RPA1: //RPA1
                     INT3R = 0;
                     TRISAbits.TRISA1 = 1;
                     ANSELAbits.ANSA1 = 0;
@@ -246,6 +256,9 @@ void initialize_Interrupt(Interrupt_Config config)
                             CNPDAbits.CNPDA1 = 1;
                             break;
                     }
+                    break;
+                default:
+                    ret = ERR_INVALID_PIN;
                     break;
             }
             INTCONbits.INT3EP = config.polarity;
@@ -306,7 +319,7 @@ void initialize_Interrupt(Interrupt_Config config)
                             break;
                     }
                     break;
-                default://RPA0
+                case Pin_RPA0://RPA0
                     INT4R = 0;
                     TRISAbits.TRISA0 = 1;
                     ANSELAbits.ANSA0 = 0;
@@ -319,6 +332,9 @@ void initialize_Interrupt(Interrupt_Config config)
                             break;
                     }
                     break;
+                default:
+                    ret = ERR_INVALID_PIN;
+                    break;
             }
             INTCONbits.INT4EP = config.polarity;
             IPC4bits.INT4IP = 7;
@@ -327,9 +343,11 @@ void initialize_Interrupt(Interrupt_Config config)
             callback_int4 = config.callback;
             break;
         default:
-            //error
+            ret = ERR_INVALID_ENUM;
             break;
     }
+    
+    return ret;
 
 }
 

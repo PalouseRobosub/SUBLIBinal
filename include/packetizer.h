@@ -50,13 +50,13 @@ extern "C" {
      * \param data The data to send
      * \param data_size The size of the data
      */
-    void send_packet(Data_Channel which_channel, uint8* data, uint8 data_size);
+    Error send_packet(Data_Channel which_channel, uint8* data, uint8 data_size);
 
     /**
      * Checks if the channel has received a packet then triggers the appropriate action
      * \param which_channel The channel to watch in the process
      */
-    void bg_process_packetizer(Data_Channel which_channel);
+    Error bg_process_packetizer(Data_Channel which_channel);
 
 	//Acquires initial synchronization with computer
 	void acquireSync(Data_Channel channel, uint pbclk);

@@ -42,9 +42,9 @@ void initialize_packetizer(Packetizer_Config config) {
     }
 }
 
-void send_packet(Data_Channel which_channel, uint8* data, uint8 data_size) {
+Error send_packet(Data_Channel which_channel, uint8* data, uint8 data_size) {
     uint interrupt_state;
-    Error ret;
+    Error ret = ERR_NO_ERR;
     interrupt_state = __builtin_get_isr_state();
     __builtin_disable_interrupts();
 
@@ -61,18 +61,14 @@ void send_packet(Data_Channel which_channel, uint8* data, uint8 data_size) {
             break;
     }
 
-    if (ret) {
-            //do stuff
-            //this means the queue is full and the packet is broken.
-            //We will lose sync
-    }
-
     __builtin_set_isr_state(interrupt_state);
+    
+    return ret;
 }
 
-void bg_process_packetizer(Data_Channel which_channel) {
+Error bg_process_packetizer(Data_Channel which_channel) {
     uint8 current_byte;
-    uint8 status;
+    uint8 status = ERR_NO_ERR;
 
     void (*receive_callback) (uint8* data, uint8 data_size); //receive callback function for the channel
     uint8* control_byte; //control byte for the channel
@@ -183,7 +179,7 @@ void bg_process_packetizer(Data_Channel which_channel) {
 
 
     } //else, some error, don't do anything
-
+    return status;
 }
 
 /////////////////////////////////

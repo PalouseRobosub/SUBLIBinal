@@ -22,7 +22,8 @@
  */
 
 
-    void initialize_PWM(PWM_Config config) {
+    Error initialize_PWM(PWM_Config config) {
+        Error ret = ERR_NO_ERR;
         //We will first initialize the OC channel
         switch (config.channel) {
             case PWM_CH_1:
@@ -45,23 +46,26 @@
                         TRISBbits.TRISB7 = 0;
                         RPB7R = 0b0101;
                         break;
-                    default: //RPA0
+                    case Pin_RPA0: //RPA0
                         ANSELAbits.ANSA0 = 0;
                         TRISAbits.TRISA0 = 0;
                         RPA0R = 0b0101;
                         break;
+                    default:
+                        ret = ERR_INVALID_PIN;
+                        break;
                 }
                 OC1CON = 0;
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC1CONbits.OCTSEL = 0;
                     OC1R = config.dutyCycle * PR2;
                     OC1RS = config.dutyCycle * PR2;
-                } else if (config.timer.which_timer == Timer_3){
+                } else if (config.timer == Timer_3){
                     OC1CONbits.OCTSEL = 1;
                     OC1R = config.dutyCycle * PR3;
                     OC1RS = config.dutyCycle * PR3;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 OC1CONbits.OCM = 0b110; //PWM no fault pin mode
                 
@@ -86,23 +90,26 @@
                         TRISBbits.TRISB8 = 0;
                         RPB8R = 0b0101;
                         break;
-                    default: //RPA1
+                    case Pin_RPA1: //RPA1
                         ANSELAbits.ANSA1 = 0;
                         TRISAbits.TRISA1 = 0;
                         RPA1R = 0b0101;
                         break;
+                    default:
+                        ret = ERR_INVALID_PIN;
+                        break;
                 }
                 OC2CON = 0;
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC2CONbits.OCTSEL = 0;
                     OC2R = config.dutyCycle * PR2;
                     OC2RS = config.dutyCycle * PR2;
-                } else if (config.timer.which_timer == Timer_3){
+                } else if (config.timer == Timer_3){
                     OC2CONbits.OCTSEL = 1;
                     OC2R = config.dutyCycle * PR3;
                     OC2RS = config.dutyCycle * PR3;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 OC2CONbits.OCM = 0b110; //PWM no fault pin mode
                 
@@ -129,22 +136,25 @@
                         TRISBbits.TRISB9 = 0;
                         RPB9R = 0b0101;
                         break;
-                    default: //RPA3
+                    case Pin_RPA3: //RPA3
                         TRISAbits.TRISA3 = 0;
                         RPA3R = 0b0101;
                         break;
+                    default:
+                        ret = ERR_INVALID_PIN;
+                        break;
                 }
                 OC3CON = 0;
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC3CONbits.OCTSEL = 0;
                     OC3R = config.dutyCycle * PR2;
                     OC3RS = config.dutyCycle * PR2;
-                } else if (config.timer.which_timer == Timer_3){
+                } else if (config.timer == Timer_3){
                     OC3CONbits.OCTSEL = 1;
                     OC3R = config.dutyCycle * PR3;
                     OC3RS = config.dutyCycle * PR3;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 OC3CONbits.OCM = 0b110; //PWM no fault pin mode
                 
@@ -153,7 +163,7 @@
             case PWM_CH_4:
                 switch (config.pin) {
                     case Pin_RPB6:
-                        //error, the xc32 compiler doesnt support this for some reason
+                        ret = ERR_INVALID_PIN; //error, the xc32 compiler doesnt support this for some reason
                         break;
                     case Pin_RPA4:
                         TRISAbits.TRISA4 = 0;
@@ -168,22 +178,25 @@
                         TRISBbits.TRISB2 = 0;
                         RPB2R = 0b0101;
                         break;
-                    default: //RPA2
+                    case Pin_RPA2: //RPA2
                         TRISAbits.TRISA2 = 0;
                         RPA2R = 0b0101;
                         break;
+                    default:
+                        ret = ERR_INVALID_PIN;
+                        break;
                 }
                 OC4CON = 0;
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC4CONbits.OCTSEL = 0;
                     OC4R = config.dutyCycle * PR2;
                     OC4RS = config.dutyCycle * PR2;
-                } else if (config.timer.which_timer == Timer_3){
+                } else if (config.timer == Timer_3){
                     OC4CONbits.OCTSEL = 1;
                     OC4R = config.dutyCycle * PR3;
                     OC4RS = config.dutyCycle * PR3;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 OC4CONbits.OCM = 0b110; //PWM no fault pin mode
                 
@@ -192,7 +205,7 @@
             case PWM_CH_5:
                 switch (config.pin) {
                     case Pin_RPB6:
-                        //error, the xc32 compiler doesnt support this for some reason
+                        ret = ERR_INVALID_PIN; //error - XC32 does not support this
                         break;
                     case Pin_RPA4:
                         TRISAbits.TRISA4 = 0;
@@ -207,28 +220,33 @@
                         TRISBbits.TRISB2 = 0;
                         RPB2R = 0b0110;
                         break;
-                    default: //RPA2
+                    case Pin_RPA2: //RPA2
                         TRISAbits.TRISA2 = 0;
                         RPA2R = 0b0110;
                         break;
+                    default:
+                        ret = ERR_INVALID_PIN;
+                        break;
                 }
                 OC5CON = 0;
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC5CONbits.OCTSEL = 0;
                     OC5R = config.dutyCycle * PR2;
                     OC5RS = config.dutyCycle * PR2;
-                } else if (config.timer.which_timer == Timer_3){
+                } else if (config.timer == Timer_3){
                     OC5CONbits.OCTSEL = 1;
                     OC5R = config.dutyCycle * PR3;
                     OC5RS = config.dutyCycle * PR3;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 OC5CONbits.OCM = 0b110; //PWM no fault pin mode
                 
                 OC5CONbits.ON = config.enable;
                 break;
         }
+        
+        return ret;
     }
     
     void enable_PWM(PWM_Channel channel) {
@@ -276,53 +294,55 @@
         }
     }
     
-    void update_PWM(PWM_Config config, float dutyCycle) {
+    Error update_PWM(PWM_Config config, float dutyCycle) {
+        Error ret = ERR_NO_ERR;
         //update the duty cycle of the respective PWM
         switch (config.channel) {
             case PWM_CH_1:
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC1RS = PR2*dutyCycle;
-                } else if (config.timer.which_timer == Timer_3) {
+                } else if (config.timer == Timer_3) {
                     OC1RS = PR3*dutyCycle;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_2:
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC2RS = PR2*dutyCycle;
-                } else if (config.timer.which_timer == Timer_3) {
+                } else if (config.timer == Timer_3) {
                     OC2RS = PR3*dutyCycle;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_3:
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC3RS = PR2*dutyCycle;
-                } else if (config.timer.which_timer == Timer_3) {
+                } else if (config.timer == Timer_3) {
                     OC3RS = PR3*dutyCycle;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_4:
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC4RS = PR2*dutyCycle;
-                } else if (config.timer.which_timer == Timer_3) {
+                } else if (config.timer == Timer_3) {
                     OC4RS = PR3*dutyCycle;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 break;
             case PWM_CH_5:
-                if (config.timer.which_timer == Timer_2) {
+                if (config.timer == Timer_2) {
                     OC5RS = PR2*dutyCycle;
-                } else if (config.timer.which_timer == Timer_3) {
+                } else if (config.timer == Timer_3) {
                     OC5RS = PR3*dutyCycle;
                 } else {
-                    //error
+                    ret = ERR_INVALID_ENUM;
                 }
                 break;
         }
+        return ret;
     }

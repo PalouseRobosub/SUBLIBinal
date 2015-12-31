@@ -75,6 +75,8 @@ extern "C" {
         //Comparator errors
         ERR_INVALID_PIN,
         ERR_INVALID_VREF,
+        //External interrupt errors
+        ERR_INVALID_POLARITY,
                 
         ERR_INVALID_SEND,
         ERR_QUEUE_FULL, //queue is full

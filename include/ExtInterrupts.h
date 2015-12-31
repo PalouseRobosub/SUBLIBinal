@@ -36,7 +36,7 @@ extern "C" {
         void *callback;
     } Interrupt_Config;
     
-    void initialize_Interrupt(Interrupt_Config config);
+    Error initialize_Interrupt(Interrupt_Config config);
     void disable_Interrupt(Interrupt extInt);
     void enable_Interrupt(Interrupt extInt);
     

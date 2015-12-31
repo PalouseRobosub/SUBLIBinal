@@ -26,7 +26,7 @@ extern "C" {
     
     typedef struct {
         float dutyCycle; // Only used in PWM mode
-        Timer_Config timer;
+        Timer_Type timer;
         Pin pin; //our output pin
         boolean enable;
         PWM_Channel channel;
@@ -34,11 +34,11 @@ extern "C" {
 
     
     //functions
-    void initialize_PWM(PWM_Config config);
+    Error initialize_PWM(PWM_Config config);
     void enable_PWM(PWM_Channel channel);
     void disable_PWM(PWM_Channel channel);
     
-    void update_PWM(PWM_Config config, float dutyCycle);
+    Error update_PWM(PWM_Config config, float dutyCycle);
     
     
     
