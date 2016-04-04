@@ -140,7 +140,10 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
 
 void bg_process_I2C(void) {
     I2C_Node current_node;
+    uint interrupt_state;
 
+    int i = 0, j = 0;
+    
     //process channel 1
     while (!dequeue(&(i2c1.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
         if (current_node.mode == READ)
@@ -153,8 +156,24 @@ void bg_process_I2C(void) {
         if (current_node.mode == READ)
         {
             dequeue(&i2c1.Data_queue, NULL, current_node.data_size); //Remove data from queue
-            i2c1.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
-            i2c1.Data_queue.QueueEnd = 0;
+            if (i2c1.Data_queue.numStored) //If there is data still in the queue, move it forward
+            {
+                interrupt_state = __builtin_get_isr_state();
+                __builtin_disable_interrupts();
+                
+                for (i = i2c1.Data_queue.QueueStart, j = 0; i < i2c1.Data_queue.QueueEnd; ++i, ++j)
+                    i2c1.Data_queue.buffer[j] = i2c1.Data_queue.buffer[i];
+                
+                i2c1.Data_queue.QueueStart = 0;
+                i2c1.Data_queue.QueueEnd = i2c1.Data_queue.numStored - 1;
+                
+                __builtin_set_isr_state(interrupt_state);
+            }
+            else
+            {
+                i2c1.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
+                i2c1.Data_queue.QueueEnd = 0;
+            }
         }
     }
 
@@ -171,8 +190,24 @@ void bg_process_I2C(void) {
         if (current_node.mode == READ)
         {
             dequeue(&i2c2.Data_queue, NULL, current_node.data_size); //Remove data from queue
-            i2c2.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
-            i2c2.Data_queue.QueueEnd = 0;
+            if (i2c2.Data_queue.numStored) //If there is data still in the queue, move it forward
+            {
+                interrupt_state = __builtin_get_isr_state();
+                __builtin_disable_interrupts();
+                
+                for (i = i2c2.Data_queue.QueueStart, j = 0; i < i2c2.Data_queue.QueueEnd; ++i, ++j)
+                    i2c2.Data_queue.buffer[j] = i2c2.Data_queue.buffer[i];
+                
+                i2c2.Data_queue.QueueStart = 0;
+                i2c2.Data_queue.QueueEnd = i2c2.Data_queue.numStored - 1;
+                
+                __builtin_set_isr_state(interrupt_state);
+            }
+            else
+            {
+                i2c2.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
+                i2c2.Data_queue.QueueEnd = 0;
+            }
         }
     }
 }
