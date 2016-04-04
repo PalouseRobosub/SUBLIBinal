@@ -35,21 +35,28 @@ I2C_STATE i2c_1_state;
 I2C_STATE i2c_2_state;
 
 I2C_Data* initialize_I2C(I2C_Config config) {
-                         //comment
+    
+    if (config.rx_percentage + config.data_percentage > 100)
+        return NULL; //Failed to create queues
+
+    int rx_end = (config.rx_percentage/100.0)*config.buffer_size;
+    int data_end = rx_end + (config.data_percentage/100.0)*config.buffer_size;
+            
     switch (config.channel) {
         case I2C_CH_1:
             I2C1BRG = config.pb_clk / (2 * I2C_SPEED) - 2; //calculate the proper divider
 
             //setup the rx and tx buffers
-            i2c1.Rx_queue = create_queue(config.rx_buffer_ptr, config.rx_buffer_size);
-            i2c1.Tx_queue = create_queue(config.tx_buffer_ptr, config.tx_buffer_size);
+            i2c1.Rx_queue = create_queue(config.buffer_ptr, rx_end);
+            i2c1.Data_queue = create_queue(&config.buffer_ptr[rx_end], data_end - rx_end);
+            i2c1.Tx_queue = create_queue(&config.buffer_ptr[data_end], config.buffer_size - data_end);
 
             I2C_1_callback = config.callback; //link the callback function
 
             i2c1.Tx_is_idle = TRUE; //set the I2C state machine to idling
             i2c_1_state = STOPPED;
 
-            //WTF MPLAB
+            //configure interrupts
             IEC1bits.I2C1MIE = 1; //enable interrupts
             IFS1bits.I2C1MIF = 0; //turn interrupts off
             IPC8bits.I2C1IP = 7;
@@ -62,15 +69,16 @@ I2C_Data* initialize_I2C(I2C_Config config) {
             I2C2BRG = config.pb_clk / (2 * I2C_SPEED)  - 2; //calculate the proper divider
 
             //setup the rx and tx buffers
-            i2c2.Rx_queue = create_queue(config.rx_buffer_ptr, config.rx_buffer_size);
-            i2c2.Tx_queue = create_queue(config.tx_buffer_ptr, config.tx_buffer_size);
-
+            i2c2.Rx_queue = create_queue(config.buffer_ptr, rx_end);
+            i2c2.Data_queue = create_queue(&config.buffer_ptr[rx_end], data_end - rx_end);
+            i2c2.Tx_queue = create_queue(&config.buffer_ptr[data_end], config.buffer_size - data_end);
+            
             I2C_2_callback = config.callback; //link the callback function
 
             i2c2.Tx_is_idle = TRUE; //set the I2C state machine to idling
             i2c_2_state = STOPPED;
 
-            //WTF MPLAB
+            //Configure interrupts
             IEC1bits.I2C2MIE = 1; //enable interrupts
             IFS1bits.I2C2MIF = 0; //turn interrupts off
             IPC9bits.I2C2IP = 7;
@@ -92,8 +100,12 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
 
     switch (channel) {
         case I2C_CH_1:
+            
             //load the new node
             status = enqueue(&(i2c1.Tx_queue), (uint8*) & node, sizeof (node));
+            
+            if (node.mode == WRITE) //Enqueue data to write if required
+                status = enqueue(&i2c1.Tx_queue, (uint8*) node.data_buffer, node.data_size);
 
             //if the bus is idling, force-start it
             if (i2c1.Tx_is_idle) {
@@ -104,6 +116,9 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
         case I2C_CH_2:
             //load the new node
             status = enqueue(&(i2c2.Tx_queue), (uint8*) & node, sizeof (node));
+            
+            if (node.mode == WRITE) //Enqueue data to write if required
+                status = enqueue(&i2c2.Tx_queue, (uint8*) node.data_buffer, node.data_size);
 
             //if the bus is idling, force-start it
             if (i2c2.Tx_is_idle) {
@@ -128,22 +143,43 @@ void bg_process_I2C(void) {
 
     //process channel 1
     while (!dequeue(&(i2c1.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+        if (current_node.mode == READ)
+            current_node.data_buffer = i2c1.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
+        
         if (current_node.callback != NULL) {
             current_node.callback(current_node);
+        }
+        
+        if (current_node.mode == READ)
+        {
+            dequeue(&i2c1.Data_queue, NULL, current_node.data_size); //Remove data from queue
+            i2c1.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
+            i2c1.Data_queue.QueueEnd = 0;
         }
     }
 
 
     //process channel 2
     while (!dequeue(&(i2c2.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+        if (current_node.mode == READ)
+            current_node.data_buffer = i2c2.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
+        
         if (current_node.callback != NULL) {
             current_node.callback(current_node);
+        }
+        
+        if (current_node.mode == READ)
+        {
+            dequeue(&i2c2.Data_queue, NULL, current_node.data_size); //Remove data from queue
+            i2c2.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
+            i2c2.Data_queue.QueueEnd = 0;
         }
     }
 }
 void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
     static I2C_Node current_node;
     static uint8 data_index;
+    uint8 byte;
 
     asm volatile ("di"); //disable interrupts
 
@@ -172,7 +208,8 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
                 i2c_1_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                I2C1TRN = current_node.data_buffer[data_index]; //send first data byte
+                dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                I2C1TRN = byte; //send first data byte
                 i2c_1_state = DATA_SENT; //move on to next state
             }
             break;
@@ -186,7 +223,8 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
                 i2c_1_state = STOPPED; //move onto next state
             } else //if we have more bytes to send
             {
-                I2C1TRN = current_node.data_buffer[data_index]; //start sending next bit
+                dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                I2C1TRN = byte; //start sending next bit
             }
             break;
 
@@ -201,7 +239,8 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
             break;
 
         case DATA_RECEIVED: //we have just received a byte
-            current_node.data_buffer[data_index] = I2C1RCV; //read the received data
+            byte = I2C1RCV;
+            enqueue(&i2c1.Data_queue, &byte, sizeof(byte)); //read the received data
 
             ++data_index;
             if (data_index == current_node.data_size) //if we have read all the data we want
@@ -256,6 +295,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
 void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
     static I2C_Node current_node;
     static uint8 data_index;
+    uint8 byte;
 
     asm volatile ("di"); //disable interrupts
 
@@ -284,7 +324,8 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                I2C2TRN = current_node.data_buffer[data_index]; //send first data byte
+                dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                I2C2TRN = byte; //send first data byte
                 i2c_2_state = DATA_SENT; //move on to next state
             }
             break;
@@ -298,7 +339,8 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = STOPPED; //move onto next state
             } else //if we have more bytes to send
             {
-                I2C2TRN = current_node.data_buffer[data_index]; //start sending next bit
+                dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                I2C2TRN = byte; //start sending next bit
             }
             break;
 
@@ -313,7 +355,9 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
             break;
 
         case DATA_RECEIVED: //we have just received a byte
-            current_node.data_buffer[data_index] = I2C2RCV; //read the received data
+            byte = I2C2RCV; //read the received data
+            
+            enqueue(&i2c2.Data_queue, &byte, sizeof(byte));
 
             ++data_index;
             if (data_index == current_node.data_size) //if we have read all the data we want

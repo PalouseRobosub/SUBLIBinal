@@ -85,7 +85,8 @@ Error dequeue(Queue* queue, uint8* output_data, uint data_size) {
             j = 0; //wrap the buffer back around
         }
 
-        output_data[i] = queue->buffer[j];
+        if (output_data) //Only store information if the user requires it
+            output_data[i] = queue->buffer[j];
     }
 
     queue->QueueStart = j;

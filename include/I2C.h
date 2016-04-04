@@ -57,6 +57,7 @@ extern "C" {
     typedef struct I2C_DATA {
         Queue Rx_queue; ///< The receive queue
         Queue Tx_queue; ///< The transmit queue
+        Queue Data_queue; ///< The Scratch pad area
         boolean Tx_is_idle; ///< Is the transmit line idle?
     } I2C_Data; ///< I2C_DATA Used for references to the I2C data queues
 
@@ -64,8 +65,8 @@ extern "C" {
         uint8 device_id; ///< A unique identifier for the device
         uint8 device_address; ///< I2C address for device
         uint8 sub_address; ///< Internal device address
-        uint8* data_buffer; ///< Data buffer to store the recieved data or write data
-        uint8 data_size; ///< How much data to send/read from device (must be <= buffer size)
+        uint8* data_buffer; ///< Data buffer used for storing send data
+        uint8 data_size; ///< How much data to send/read from device (must be = buffer size)
         I2C_MODE mode; ///< Reading or writing?
         void (*callback) (struct I2C_NODE); ///< Callback function
     } I2C_Node; ///< I2C data node
@@ -73,10 +74,10 @@ extern "C" {
     typedef struct I2C_CONFIG {
         uint pb_clk; ///< The speed of the peripheral bus clock
         I2C_Channel channel; ///< The I2C channel to use
-        uint8 *rx_buffer_ptr; ///< Pointer to the receive buffer queue
-        uint rx_buffer_size; ///< The size of the receive buffer
-        uint8 *tx_buffer_ptr; ///< Pointer to the transmit buffer queue
-        uint tx_buffer_size; ///< The size of the transmit buffer
+        uint8 *buffer_ptr; ///< Pointer to memory to utilize for send and receive queues
+        uint buffer_size; ///< Size in bytes pointed to by buffer_ptr
+        uint rx_percentage; ///< Specifies the percentage of buffer area dedicated to RX (0 - 100)
+        uint data_percentage; ///< Specifies what percentage of the buffer should be dedicated to received data (0 - 100)
         void* callback; ///< Callback function
     }I2C_Config; ///< The configuration struct for the I2C busses
 
