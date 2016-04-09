@@ -55,10 +55,10 @@ extern "C" {
 
     /*Object Defintions*/
     typedef struct I2C_DATA {
-        Queue Rx_queue; ///< The receive queue
-        Queue Tx_queue; ///< The transmit queue
+        Queue Result_queue; ///< The receive queue
+        Queue Work_queue; ///< The transmit queue
         Queue Data_queue; ///< The Scratch pad area
-        boolean Tx_is_idle; ///< Is the transmit line idle?
+        boolean is_idle; ///< Is the i2c bus idle?
     } I2C_Data; ///< I2C_DATA Used for references to the I2C data queues
 
     typedef struct I2C_NODE {
@@ -74,10 +74,13 @@ extern "C" {
     typedef struct I2C_CONFIG {
         uint pb_clk; ///< The speed of the peripheral bus clock
         I2C_Channel channel; ///< The I2C channel to use
-        uint8 *buffer_ptr; ///< Pointer to memory to utilize for send and receive queues
-        uint buffer_size; ///< Size in bytes pointed to by buffer_ptr
-        uint rx_percentage; ///< Specifies the percentage of buffer area dedicated to RX (0 - 100)
-        uint data_percentage; ///< Specifies what percentage of the buffer should be dedicated to received data (0 - 100)
+        uint8 *work_buffer_ptr; ///< Pointer to memory to utilize for "todo" i2c tasks
+        uint work_buffer_size; ///< Size in bytes pointed to by work_buffer_ptr
+        uint8 *result_buffer_ptr; ///< Pointer to memory to utilize for "completed" i2c tasks
+        uint result_buffer_size; ///< Size in bytes pointed to by work_buffer_ptr
+        uint8 *data_buffer_ptr;
+        uint data_buffer_size;
+
         void* callback; ///< Callback function
     }I2C_Config; ///< The configuration struct for the I2C busses
 
@@ -113,4 +116,3 @@ extern "C" {
 #endif
 
 #endif	/* I2C_H */
-

@@ -35,25 +35,19 @@ I2C_STATE i2c_1_state;
 I2C_STATE i2c_2_state;
 
 I2C_Data* initialize_I2C(I2C_Config config) {
-    
-    if (config.rx_percentage + config.data_percentage > 100)
-        return NULL; //Failed to create queues
 
-    int rx_end = (config.rx_percentage/100.0)*config.buffer_size;
-    int data_end = rx_end + (config.data_percentage/100.0)*config.buffer_size;
-            
     switch (config.channel) {
         case I2C_CH_1:
             I2C1BRG = config.pb_clk / (2 * I2C_SPEED) - 2; //calculate the proper divider
 
             //setup the rx and tx buffers
-            i2c1.Rx_queue = create_queue(config.buffer_ptr, rx_end);
-            i2c1.Data_queue = create_queue(&config.buffer_ptr[rx_end], data_end - rx_end);
-            i2c1.Tx_queue = create_queue(&config.buffer_ptr[data_end], config.buffer_size - data_end);
+            i2c1.Result_queue = create_queue(config.result_buffer_ptr, config.result_buffer_size);
+            i2c1.Data_queue = create_queue(config.data_buffer_ptr, config.data_buffer_size);
+            i2c1.Work_queue = create_queue(config.work_buffer_ptr, config.work_buffer_size);
 
             I2C_1_callback = config.callback; //link the callback function
 
-            i2c1.Tx_is_idle = TRUE; //set the I2C state machine to idling
+            i2c1.is_idle = TRUE; //set the I2C state machine to idling
             i2c_1_state = STOPPED;
 
             //configure interrupts
@@ -69,13 +63,13 @@ I2C_Data* initialize_I2C(I2C_Config config) {
             I2C2BRG = config.pb_clk / (2 * I2C_SPEED)  - 2; //calculate the proper divider
 
             //setup the rx and tx buffers
-            i2c2.Rx_queue = create_queue(config.buffer_ptr, rx_end);
-            i2c2.Data_queue = create_queue(&config.buffer_ptr[rx_end], data_end - rx_end);
-            i2c2.Tx_queue = create_queue(&config.buffer_ptr[data_end], config.buffer_size - data_end);
-            
+            i2c2.Result_queue = create_queue(config.result_buffer_ptr, config.result_buffer_size);
+            i2c2.Data_queue = create_queue(config.data_buffer_ptr, config.data_buffer_size);
+            i2c2.Work_queue = create_queue(config.work_buffer_ptr, config.work_buffer_size);
+
             I2C_2_callback = config.callback; //link the callback function
 
-            i2c2.Tx_is_idle = TRUE; //set the I2C state machine to idling
+            i2c2.is_idle = TRUE; //set the I2C state machine to idling
             i2c_2_state = STOPPED;
 
             //Configure interrupts
@@ -100,28 +94,28 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
 
     switch (channel) {
         case I2C_CH_1:
-            
+
             //load the new node
-            status = enqueue(&(i2c1.Tx_queue), (uint8*) & node, sizeof (node));
-            
+            status = enqueue(&(i2c1.Work_queue), (uint8*) & node, sizeof (node));
+
             if (node.mode == WRITE) //Enqueue data to write if required
-                status = enqueue(&i2c1.Tx_queue, (uint8*) node.data_buffer, node.data_size);
+                status = enqueue(&i2c1.Work_queue, (uint8*) node.data_buffer, node.data_size);
 
             //if the bus is idling, force-start it
-            if (i2c1.Tx_is_idle) {
+            if (i2c1.is_idle) {
                 IFS1bits.I2C1MIF = 1;
             }
             break;
 
         case I2C_CH_2:
             //load the new node
-            status = enqueue(&(i2c2.Tx_queue), (uint8*) & node, sizeof (node));
-            
+            status = enqueue(&(i2c2.Work_queue), (uint8*) & node, sizeof (node));
+
             if (node.mode == WRITE) //Enqueue data to write if required
-                status = enqueue(&i2c2.Tx_queue, (uint8*) node.data_buffer, node.data_size);
+                status = enqueue(&i2c2.Work_queue, (uint8*) node.data_buffer, node.data_size);
 
             //if the bus is idling, force-start it
-            if (i2c2.Tx_is_idle) {
+            if (i2c2.is_idle) {
                 IFS1bits.I2C2MIF = 1;
             }
 
@@ -143,16 +137,16 @@ void bg_process_I2C(void) {
     uint interrupt_state;
 
     int i = 0, j = 0;
-    
+
     //process channel 1
-    while (!dequeue(&(i2c1.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+    while (!dequeue(&(i2c1.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
         if (current_node.mode == READ)
             current_node.data_buffer = i2c1.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
-        
+
         if (current_node.callback != NULL) {
             current_node.callback(current_node);
         }
-        
+
         if (current_node.mode == READ)
         {
             dequeue(&i2c1.Data_queue, NULL, current_node.data_size); //Remove data from queue
@@ -160,13 +154,13 @@ void bg_process_I2C(void) {
             {
                 interrupt_state = __builtin_get_isr_state();
                 __builtin_disable_interrupts();
-                
+
                 for (i = i2c1.Data_queue.QueueStart, j = 0; i < i2c1.Data_queue.QueueEnd; ++i, ++j)
                     i2c1.Data_queue.buffer[j] = i2c1.Data_queue.buffer[i];
-                
+
                 i2c1.Data_queue.QueueStart = 0;
                 i2c1.Data_queue.QueueEnd = i2c1.Data_queue.numStored - 1;
-                
+
                 __builtin_set_isr_state(interrupt_state);
             }
             else
@@ -179,14 +173,14 @@ void bg_process_I2C(void) {
 
 
     //process channel 2
-    while (!dequeue(&(i2c2.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+    while (!dequeue(&(i2c2.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
         if (current_node.mode == READ)
             current_node.data_buffer = i2c2.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
-        
+
         if (current_node.callback != NULL) {
             current_node.callback(current_node);
         }
-        
+
         if (current_node.mode == READ)
         {
             dequeue(&i2c2.Data_queue, NULL, current_node.data_size); //Remove data from queue
@@ -194,13 +188,13 @@ void bg_process_I2C(void) {
             {
                 interrupt_state = __builtin_get_isr_state();
                 __builtin_disable_interrupts();
-                
+
                 for (i = i2c2.Data_queue.QueueStart, j = 0; i < i2c2.Data_queue.QueueEnd; ++i, ++j)
                     i2c2.Data_queue.buffer[j] = i2c2.Data_queue.buffer[i];
-                
+
                 i2c2.Data_queue.QueueStart = 0;
                 i2c2.Data_queue.QueueEnd = i2c2.Data_queue.numStored - 1;
-                
+
                 __builtin_set_isr_state(interrupt_state);
             }
             else
@@ -243,7 +237,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
                 i2c_1_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                dequeue(&i2c1.Work_queue, &byte, sizeof(byte));
                 I2C1TRN = byte; //send first data byte
                 i2c_1_state = DATA_SENT; //move on to next state
             }
@@ -258,7 +252,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
                 i2c_1_state = STOPPED; //move onto next state
             } else //if we have more bytes to send
             {
-                dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                dequeue(&i2c1.Work_queue, &byte, sizeof(byte));
                 I2C1TRN = byte; //start sending next bit
             }
             break;
@@ -301,7 +295,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
             I2C1CONbits.PEN = 1; //send the stop signal
 
             //put node in receive buffer
-            if (enqueue(&(i2c1.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+            if (enqueue(&(i2c1.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
                 //queue is full, error handling?
             }
 
@@ -309,12 +303,12 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
             break;
 
         case STOPPED: //we have just sent the stop signal
-            if (dequeue(&(i2c1.Tx_queue), (uint8*) & current_node, sizeof (current_node))) //load next node from the queue
+            if (dequeue(&(i2c1.Work_queue), (uint8*) & current_node, sizeof (current_node))) //load next node from the queue
             {
-                i2c1.Tx_is_idle = TRUE; //flag that the bus is idle (nothing in the send queue)
+                i2c1.is_idle = TRUE; //flag that the bus is idle (nothing in the send queue)
             } else {
                 I2C1CONbits.SEN = 1; //send the start signal
-                i2c1.Tx_is_idle = FALSE; //flag that the bus is working now
+                i2c1.is_idle = FALSE; //flag that the bus is working now
                 i2c_1_state = STARTED; //move onto next state
             }
             break;
@@ -359,7 +353,7 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                dequeue(&i2c2.Work_queue, &byte, sizeof(byte));
                 I2C2TRN = byte; //send first data byte
                 i2c_2_state = DATA_SENT; //move on to next state
             }
@@ -374,7 +368,7 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = STOPPED; //move onto next state
             } else //if we have more bytes to send
             {
-                dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                dequeue(&i2c2.Work_queue, &byte, sizeof(byte));
                 I2C2TRN = byte; //start sending next bit
             }
             break;
@@ -391,7 +385,7 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
 
         case DATA_RECEIVED: //we have just received a byte
             byte = I2C2RCV; //read the received data
-            
+
             enqueue(&i2c2.Data_queue, &byte, sizeof(byte));
 
             ++data_index;
@@ -418,7 +412,7 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
             I2C2CONbits.PEN = 1; //send the stop signal
 
             //put node in receive buffer
-            if (enqueue(&(i2c2.Rx_queue), (uint8*) & current_node, sizeof (current_node))) {
+            if (enqueue(&(i2c2.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
                 //queue is full, error handling?
             }
 
@@ -426,12 +420,12 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
             break;
 
         case STOPPED: //we have just sent the stop signal
-            if (dequeue(&(i2c2.Tx_queue), (uint8*) & current_node, sizeof (current_node))) //load next node from the queue
+            if (dequeue(&(i2c2.Work_queue), (uint8*) & current_node, sizeof (current_node))) //load next node from the queue
             {
-                i2c2.Tx_is_idle = TRUE; //flag that the bus is idle (nothing in the send queue)
+                i2c2.is_idle = TRUE; //flag that the bus is idle (nothing in the send queue)
             } else {
                 I2C2CONbits.SEN = 1; //send the start signal
-                i2c2.Tx_is_idle = FALSE; //flag that the bus is working now
+                i2c2.is_idle = FALSE; //flag that the bus is working now
                 i2c_2_state = STARTED; //move onto next state
             }
             break;
