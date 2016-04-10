@@ -227,7 +227,8 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
 
         case DEV_ADDR_W_SENT: //device addresss + write bit has been sent, now to send the sub address
             I2C1TRN = current_node.sub_address; //send sub address byte
-            i2c_1_state = SUB_ADDR_SENT; //move to next state
+            if (current_node.data_size)
+                i2c_1_state = SUB_ADDR_SENT; //move to next state
             break;
 
         case SUB_ADDR_SENT: //sub address has been sent, need logic to determine next step
@@ -237,9 +238,17 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
                 i2c_1_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                dequeue(&i2c1.Work_queue, &byte, sizeof(byte));
-                I2C1TRN = byte; //send first data byte
-                i2c_1_state = DATA_SENT; //move on to next state
+                if (current_node.data_size)
+                {
+                    dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                    I2C1TRN = byte; //send first data byte
+                    i2c_1_state = DATA_SENT; //move on to next state
+                }
+                else
+                {
+                    I2C1CONbits.PEN = 1;
+                    i2c_1_state = STOPPED;
+                }
             }
             break;
 
@@ -353,9 +362,17 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = RESTARTED; //move onto next state
             } else //if we want to write
             {
-                dequeue(&i2c2.Work_queue, &byte, sizeof(byte));
-                I2C2TRN = byte; //send first data byte
-                i2c_2_state = DATA_SENT; //move on to next state
+                if (current_node.data_size)
+                {
+                    dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                    I2C2TRN = byte; //send first data byte
+                    i2c_2_state = DATA_SENT; //move on to next state
+                }
+                else
+                {
+                    I2C2CONbits.PEN = 1;
+                    i2c_2_state = STOPPED;
+                }
             }
             break;
 
