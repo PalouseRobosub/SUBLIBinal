@@ -240,7 +240,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
             {
                 if (current_node.data_size)
                 {
-                    dequeue(&i2c1.Tx_queue, &byte, sizeof(byte));
+                    dequeue(&i2c1.Work_queue, &byte, sizeof(byte));
                     I2C1TRN = byte; //send first data byte
                     i2c_1_state = DATA_SENT; //move on to next state
                 }
@@ -364,7 +364,7 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
             {
                 if (current_node.data_size)
                 {
-                    dequeue(&i2c2.Tx_queue, &byte, sizeof(byte));
+                    dequeue(&i2c2.Work_queue, &byte, sizeof(byte));
                     I2C2TRN = byte; //send first data byte
                     i2c_2_state = DATA_SENT; //move on to next state
                 }
