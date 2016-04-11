@@ -227,8 +227,7 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
 
         case DEV_ADDR_W_SENT: //device addresss + write bit has been sent, now to send the sub address
             I2C1TRN = current_node.sub_address; //send sub address byte
-            if (current_node.data_size)
-                i2c_1_state = SUB_ADDR_SENT; //move to next state
+            i2c_1_state = SUB_ADDR_SENT; //move to next state
             break;
 
         case SUB_ADDR_SENT: //sub address has been sent, need logic to determine next step
