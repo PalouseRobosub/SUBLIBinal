@@ -68,6 +68,7 @@ extern "C" {
         uint8* data_buffer; ///< Data buffer used for storing send data
         uint8 data_size; ///< How much data to send/read from device (must be = buffer size)
         I2C_MODE mode; ///< Reading or writing?
+        I2C_Channel channel; ////< which channel this node is going in to.
         void (*callback) (struct I2C_NODE); ///< Callback function
     } I2C_Node; ///< I2C data node
 
@@ -109,7 +110,10 @@ extern "C" {
      * Processes the results of I2C transactions.
      * Run in the main while loop.
      */
-    void bg_process_I2C(void);
+    void bg_process_I2C(I2C_Channel channel, boolean loop);
+
+    Error get_data_I2C(const I2C_Node* node, uint8* data);
+
 
 #ifdef	__cplusplus
 }

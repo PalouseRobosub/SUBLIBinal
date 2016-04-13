@@ -132,79 +132,65 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
 //run this background process in the main while loop to
 //process the results of I2C transactions
 
-void bg_process_I2C(void) {
+void bg_process_I2C(I2C_Channel channel, boolean loop) {
     I2C_Node current_node;
-    uint interrupt_state;
+    Queue *result_queue;
 
-    int i = 0, j = 0;
+    switch(channel)
+    {
+      case I2C_CH_1:
+        result_queue = &i2c1.Result_queue;
+      break;
 
-    //process channel 1
-    while (!dequeue(&(i2c1.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
-        if (current_node.mode == READ)
-            current_node.data_buffer = i2c1.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
-
-        if (current_node.callback != NULL) {
-            current_node.callback(current_node);
-        }
-
-        if (current_node.mode == READ)
-        {
-            dequeue(&i2c1.Data_queue, NULL, current_node.data_size); //Remove data from queue
-            if (i2c1.Data_queue.numStored) //If there is data still in the queue, move it forward
-            {
-                interrupt_state = __builtin_get_isr_state();
-                __builtin_disable_interrupts();
-
-                for (i = i2c1.Data_queue.QueueStart, j = 0; i < i2c1.Data_queue.QueueEnd; ++i, ++j)
-                    i2c1.Data_queue.buffer[j] = i2c1.Data_queue.buffer[i];
-
-                i2c1.Data_queue.QueueStart = 0;
-                i2c1.Data_queue.QueueEnd = i2c1.Data_queue.numStored - 1;
-
-                __builtin_set_isr_state(interrupt_state);
-            }
-            else
-            {
-                i2c1.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
-                i2c1.Data_queue.QueueEnd = 0;
-            }
-        }
+      case I2C_CH_2:
+        result_queue = &i2c2.Result_queue;
+      break;
     }
 
-
-    //process channel 2
-    while (!dequeue(&(i2c2.Result_queue), (uint8*) & current_node, sizeof (current_node))) {
-        if (current_node.mode == READ)
-            current_node.data_buffer = i2c2.Data_queue.buffer; //Hand a pointer to the data scratchpad buffer
-
-        if (current_node.callback != NULL) {
+    //process channel
+    if(loop) //check if user wants to loop through all nodes, or just once
+    {
+      while (!dequeue(result_queue, (uint8*) & current_node, sizeof (current_node))) //loop until queue is empty
+      {
+          if (current_node.callback != NULL)
+          {
+              current_node.callback(current_node);
+          }
+      }
+    }
+    else
+    {
+      if(dequeue(result_queue, (uint8*) & current_node, sizeof (current_node)) == ERR_NO_ERR) //just get one node out
+      {
+        if (current_node.callback != NULL)
+        {
             current_node.callback(current_node);
         }
-
-        if (current_node.mode == READ)
-        {
-            dequeue(&i2c2.Data_queue, NULL, current_node.data_size); //Remove data from queue
-            if (i2c2.Data_queue.numStored) //If there is data still in the queue, move it forward
-            {
-                interrupt_state = __builtin_get_isr_state();
-                __builtin_disable_interrupts();
-
-                for (i = i2c2.Data_queue.QueueStart, j = 0; i < i2c2.Data_queue.QueueEnd; ++i, ++j)
-                    i2c2.Data_queue.buffer[j] = i2c2.Data_queue.buffer[i];
-
-                i2c2.Data_queue.QueueStart = 0;
-                i2c2.Data_queue.QueueEnd = i2c2.Data_queue.numStored - 1;
-
-                __builtin_set_isr_state(interrupt_state);
-            }
-            else
-            {
-                i2c2.Data_queue.QueueStart = 0; //Point to start of array to ensure that all data is contiguous
-                i2c2.Data_queue.QueueEnd = 0;
-            }
-        }
+      }
     }
 }
+
+Error get_data_I2C(const I2C_Node* node, uint8* data)
+{
+  Error status;
+  Queue *data_queue;
+
+  switch(node->channel)
+  {
+    case I2C_CH_1:
+      data_queue = &i2c1.Data_queue;
+    break;
+
+    case I2C_CH_2:
+      data_queue = &i2c2.Data_queue;
+    break;
+  }
+
+  status = dequeue(data_queue, data, node->data_size);
+
+  return status;
+}
+
 void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
     static I2C_Node current_node;
     static uint8 data_index;
