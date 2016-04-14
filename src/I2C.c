@@ -154,7 +154,7 @@ void bg_process_I2C(I2C_Channel channel, boolean loop) {
       {
           if (current_node.callback != NULL)
           {
-              current_node.callback(current_node);
+              //current_node.callback(current_node);
           }
       }
     }
@@ -164,29 +164,27 @@ void bg_process_I2C(I2C_Channel channel, boolean loop) {
       {
         if (current_node.callback != NULL)
         {
-            current_node.callback(current_node);
+            //current_node.callback(current_node);
         }
       }
     }
 }
 
-Error get_data_I2C(const I2C_Node* node, uint8* data)
+Error get_data_I2C(I2C_Node* node, uint8* data)
 {
   Error status;
-  Queue *data_queue;
 
   switch(node->channel)
   {
     case I2C_CH_1:
-      data_queue = &i2c1.Data_queue;
+        status = dequeue(&i2c1.Data_queue, data, node->data_size);
     break;
 
     case I2C_CH_2:
-      data_queue = &i2c2.Data_queue;
+        status = dequeue(&i2c2.Data_queue, data, node->data_size);
     break;
   }
 
-  status = dequeue(data_queue, data, node->data_size);
 
   return status;
 }

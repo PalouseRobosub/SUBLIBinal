@@ -112,7 +112,7 @@ extern "C" {
      */
     void bg_process_I2C(I2C_Channel channel, boolean loop);
 
-    Error get_data_I2C(const I2C_Node* node, uint8* data);
+    Error get_data_I2C(I2C_Node* node, uint8* data);
 
 
 #ifdef	__cplusplus
