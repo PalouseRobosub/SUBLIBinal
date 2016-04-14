@@ -23,8 +23,6 @@
 
 
 //callback functions
-void (*I2C_1_callback) (void);
-void (*I2C_2_callback) (void);
 
 //channel data structures
 I2C_Data i2c1 = {0};
@@ -45,8 +43,6 @@ I2C_Data* initialize_I2C(I2C_Config config) {
             i2c1.Data_queue = create_queue(config.data_buffer_ptr, config.data_buffer_size);
             i2c1.Work_queue = create_queue(config.work_buffer_ptr, config.work_buffer_size);
 
-            I2C_1_callback = config.callback; //link the callback function
-
             i2c1.is_idle = TRUE; //set the I2C state machine to idling
             i2c_1_state = STOPPED;
 
@@ -66,8 +62,6 @@ I2C_Data* initialize_I2C(I2C_Config config) {
             i2c2.Result_queue = create_queue(config.result_buffer_ptr, config.result_buffer_size);
             i2c2.Data_queue = create_queue(config.data_buffer_ptr, config.data_buffer_size);
             i2c2.Work_queue = create_queue(config.work_buffer_ptr, config.work_buffer_size);
-
-            I2C_2_callback = config.callback; //link the callback function
 
             i2c2.is_idle = TRUE; //set the I2C state machine to idling
             i2c_2_state = STOPPED;
@@ -91,6 +85,11 @@ I2C_Data* initialize_I2C(I2C_Config config) {
 
 Error send_I2C(I2C_Channel channel, I2C_Node node) {
     Error status = ERR_NO_ERR;
+    
+    uint interrupt_state;
+
+    interrupt_state = __builtin_get_isr_state();
+    __builtin_disable_interrupts();
 
     switch (channel) {
         case I2C_CH_1:
@@ -125,6 +124,8 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
             //some sort of error handling?
             status = ERR_INVALID_CHANNEL;
     }
+    
+    __builtin_set_isr_state(interrupt_state);
 
     return status;
 }
@@ -154,7 +155,7 @@ void bg_process_I2C(I2C_Channel channel, boolean loop) {
       {
           if (current_node.callback != NULL)
           {
-              //current_node.callback(current_node);
+              current_node.callback(current_node);
           }
       }
     }
@@ -164,7 +165,7 @@ void bg_process_I2C(I2C_Channel channel, boolean loop) {
       {
         if (current_node.callback != NULL)
         {
-            //current_node.callback(current_node);
+            current_node.callback(current_node);
         }
       }
     }
@@ -306,10 +307,6 @@ void __ISR(_I2C_1_VECTOR, IPL7AUTO) I2C_1_Handler(void) {
             break;
     }
 
-    if (I2C_1_callback != NULL) {
-        I2C_1_callback();
-    }
-
     asm volatile ("ei"); //reenable interrupts
 }
 
@@ -429,10 +426,6 @@ void __ISR(_I2C_2_VECTOR, IPL7AUTO) I2C_2_Handler(void) {
                 i2c_2_state = STARTED; //move onto next state
             }
             break;
-    }
-
-    if (I2C_2_callback != NULL) {
-        I2C_2_callback();
     }
 
     asm volatile ("ei"); //reenable interrupts

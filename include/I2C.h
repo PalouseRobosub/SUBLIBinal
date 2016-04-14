@@ -81,8 +81,6 @@ extern "C" {
         uint result_buffer_size; ///< Size in bytes pointed to by work_buffer_ptr
         uint8 *data_buffer_ptr;
         uint data_buffer_size;
-
-        void* callback; ///< Callback function
     }I2C_Config; ///< The configuration struct for the I2C busses
 
     /*Function Prototypes*/
