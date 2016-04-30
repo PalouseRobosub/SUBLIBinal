@@ -15,7 +15,7 @@ extern "C" {
 #include "System.h"
 #include "Queue.h"
 
-#define I2C_SPEED (100000)
+#define I2C_SPEED (400000)
 
     /* Enums */
     /// \enum I2C_MODE Reading or writing from the device
