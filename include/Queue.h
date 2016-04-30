@@ -53,7 +53,12 @@ extern "C" {
      */
     Error dequeue(Queue* queue, uint8* output_data, uint data_size);
 
-
+    /**
+     * Returns the number of available bytes within a queue
+     * \param queue The queue to query
+     * \return The number of bytes available in the queue
+     */
+    int getAvailable(Queue *queue);
 
 #ifdef	__cplusplus
 }

@@ -95,11 +95,14 @@ Error send_I2C(I2C_Channel channel, I2C_Node node) {
         case I2C_CH_1:
 
             //load the new node
-            status = enqueue(&(i2c1.Work_queue), (uint8*) & node, sizeof (node));
-
-            if (node.mode == WRITE) //Enqueue data to write if required
+            if (getAvailable(&i2c1.Work_queue) >= (sizeof(node) + node.data_size) && node.mode == WRITE)
+            {
+                status = enqueue(&(i2c1.Work_queue), (uint8*) & node, sizeof (node));
                 status = enqueue(&i2c1.Work_queue, (uint8*) node.data_buffer, node.data_size);
-
+            }
+            else if(getAvailable(&i2c1.Work_queue) >= sizeof(node))
+                status = enqueue(&(i2c1.Work_queue), (uint8*) & node, sizeof (node));
+            
             //if the bus is idling, force-start it
             if (i2c1.is_idle) {
                 IFS1bits.I2C1MIF = 1;

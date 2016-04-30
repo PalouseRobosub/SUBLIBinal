@@ -94,3 +94,8 @@ Error dequeue(Queue* queue, uint8* output_data, uint data_size) {
     __builtin_set_isr_state(interrupt_state);
     return ERR_NO_ERR;
 }
+
+int getAvailable(Queue *queue)
+{
+    return queue->buffer_size - queue->numStored;
+}
