@@ -82,11 +82,6 @@ extern "C" {
     Error update_divider_Timer(Timer_Type which_timer, Clock_Divider div);
 
 
-	//AutoSync Functions
-	void *getSyncCallback();
-	void setSyncCallback(void *callback);
-
-
 #ifdef	__cplusplus
 }
 #endif
