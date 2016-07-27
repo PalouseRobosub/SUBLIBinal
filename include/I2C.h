@@ -112,6 +112,8 @@ extern "C" {
 
     Error get_data_I2C(I2C_Node* node, uint8* data);
 
+    void flush_queue_I2C(I2C_Channel channel);
+
 
 #ifdef	__cplusplus
 }

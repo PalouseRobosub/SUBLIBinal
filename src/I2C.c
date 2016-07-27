@@ -83,6 +83,20 @@ I2C_Data* initialize_I2C(I2C_Config config) {
     return NULL;
 }
 
+void flush_queue_I2C(I2C_Channel channel)
+{
+    if (channel == I2C_CH_1)
+    {
+        i2c1.Data_queue.QueueStart = i2c1.Data_queue.QueueEnd = i2c1.Data_queue.numStored = 0;
+        i2c1.Work_queue.QueueStart = i2c1.Work_queue.QueueEnd = i2c1.Work_queue.numStored = 0;
+    }
+    else
+    {
+        i2c2.Data_queue.QueueStart = i2c2.Data_queue.QueueEnd = i2c2.Data_queue.numStored = 0;
+        i2c2.Work_queue.QueueStart = i2c2.Work_queue.QueueEnd = i2c2.Work_queue.numStored = 0;
+    }
+}
+
 Error send_I2C(I2C_Channel channel, I2C_Node node) {
     Error status = ERR_NO_ERR;
     
